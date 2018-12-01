@@ -1,5 +1,5 @@
+from sys import platform
 import os
-from PATH import get_path
 import numpy as np
 import matplotlib.pyplot as plt
 from sys import platform
@@ -9,7 +9,24 @@ import pickle as pkl
 #from power_spectrum_test import raPsd2d
 print(5)
 
+
+
 #%%
+
+
+
+
+def get_path():
+    if platform == "darwin":
+        return r'/Users/HirokazuKatori/Desktop/Msci Project'
+    elif platform == "linux":
+        return r'/home/jz8415/21cmFAST-master'
+    else:
+        return r'C:\21cmFAST\21cmFAST-master'
+
+
+
+
 def get_user():
     linpath = os.getcwd()
     user = linpath.split('/')[2]
