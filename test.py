@@ -70,7 +70,7 @@ img1 = [[1,1,1], [1,1,1], [1,1,1]]
 img2 = [[1,1,1], [1,1,1], [1,1,1]]
 
 img1 = box[0]
-img2 = box[0]
+img2 = box[128]
 S = dcgan_21cm.crossraPsd2d(img1,img2,show=True)
 
 #%%
