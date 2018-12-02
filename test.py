@@ -5,6 +5,7 @@ os.chdir(r"C:\Users\Joschka\github\MSci2")
 # IMPORTS
 import importlib
 import numpy as np
+import matplotlib.pyplot as plt
 import utils
 from os import listdir
 from os.path import isfile, join
@@ -13,8 +14,6 @@ importlib.reload(utils)
 
 # %% READ A BOX
 box = utils.read_box(r'delta_T_v3_no_halos_z007.20_nf0.715123_useTs0_zetaX-1.0e+00_alphaX-1.0_TvirminX-1.0e+00_aveTb014.04_Pop-1_256_300Mpc')
-
-
 # %% VISUALIZE A BOX
 utils.show_box(box)
 
@@ -61,3 +60,19 @@ print(boxnames)
 print(len(boxnames))
 #%%
 utils.boxes_to_list_of_slices(boxnames, mypath='C:\Outputs\Outputs')
+
+
+#%%
+import dcgan_21cm
+importlib.reload(utils)
+importlib.reload(dcgan_21cm)
+img1 = [[1,1,1], [1,1,1], [1,1,1]]
+img2 = [[1,1,1], [1,1,1], [1,1,1]]
+
+img1 = box[0]
+img2 = box[0]
+S = dcgan_21cm.crossraPsd2d(img1,img2,show=True)
+
+#%%
+plt.semilogy(S[:])
+plt.show()
