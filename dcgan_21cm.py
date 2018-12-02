@@ -7,6 +7,8 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
 
 import matplotlib.pyplot as plt
 
@@ -17,9 +19,9 @@ import numpy as np
 from scipy.misc import imresize
 import pickle
 
-if platform == "linux":
-    #%run utils.ipynb
-    user = get_user()
+#if platform == "linux":
+ #   %run utils.ipynb
+  #  user = get_user()
 
 
 def raPsd2d(img, res, show=False):
@@ -70,19 +72,35 @@ def raPsd2d(img, res, show=False):
     return S
 
 def produce_average_ps(slices):
-    PS = np.zeros(128)
+    PS = np.zeros(127) #the first value of the PS is always zero so ignore that
     N = len(slices)
-    
+    values_list = [ [] for i in range(127) ] #list of 127 empty lists
+    std_list = []
+    S0 = []
+    S1 = []
+
     for i in range(N):
         slc = slices[i]
         S = raPsd2d(slc,(256,256))
+        S = S[1:] #ignore the first element in PS becuase its always zero
+        S0.append(S[0])
+        S1.append(S[1])
         PS = np.add(PS,S)
-    
+        for j in range(len(S)):
+            values_list[j].append(S[j])
     PS = PS / N
-    return PS
+    #print(S0)
+    #print(S1)
 
-def compare_ps(real_PS,fake_PS):
+    for k in range(len(values_list)):
+        std = np.std(values_list[k])
+        std_list.append(std)
+    return PS,std_list
+
+def compare_ps(real_PS,fake_PS,fake_ps_std):
     diff = np.subtract(real_PS,fake_PS)
+    for i in range(len(diff)):
+        diff[i] = (1.*diff[i])/fake_ps_std[i]
     mod_diff2 = diff**2
     tot_diff = np.sum(mod_diff2)
     return tot_diff
@@ -90,7 +108,7 @@ def compare_ps(real_PS,fake_PS):
 def get_pk_hist(slices):
     N = len(slices)
     count_list = []
-    
+
     for i in range(N):
         counts = []
         slc = slices[i]
@@ -109,9 +127,21 @@ def get_pk_hist(slices):
                                 largest = False
                                 done = True
                 if largest == True:
-                    counts.append(middle)                    
-        count_list.append(len(counts))       
+                    counts.append(middle)
+        count_list.append(len(counts))
     return count_list
+
+def get_pixel_val(slices):
+    N = len(slices)
+    elem = [] #list of elements to use for histogram
+
+    for i in range(N):
+        slc = slices[i]
+        for j in range(np.shape(slc)[0]):
+            for k in range(np.shape(slc)[1]):
+                elem.append(slc[j,k][0])
+
+    return elem
 
 class DCGAN():
     def __init__(self):
@@ -200,7 +230,7 @@ class DCGAN():
         img = model(noise)
 
         return Model(noise, img)
-    
+
     def build_discriminator(self):
 
         model = Sequential()
@@ -262,13 +292,13 @@ class DCGAN():
         #print('DONE RESHAPING')
         #X_train = np.array(new)
         #print(np.shape(X_train))
-        
+
         if platform == "linux":
             #user = get_user()
             slices = pickle.load(open(r"/home/" + user + r"/Outputs/slices.pkl","rb"))
         else:
             slices = pickle.load(open(r"C:\\Outputs\\slices.pkl", "rb"))
-            
+
         slices = np.array(slices)
         X_train = np.interp(slices, (slices.min(), slices.max()), (-1, +1))
 
@@ -281,7 +311,7 @@ class DCGAN():
 
         d_loss = [1,0]
         i = 0
-        
+
         diff_list = []
         mod_sq = []
         epoch_list = []
@@ -346,105 +376,97 @@ class DCGAN():
                             plt.plot(hist_PSD_fake[i][5::], color="orange", alpha=0.1)
                 plt.legend()
                 if platform == "linux":
-                    #user = get_user()
                     plt.savefig(r"/home/" + user + r"/Important/Images/ps_%d.png" % epoch)
                 else:
                     plt.savefig("images/ps_%d.png" % epoch)
                 plt.close()
-            
-            look_for_cnvrg_at = 20
+
+            look_for_cnvrg_at = 50
             if epoch == 0:
-                idx = np.random.randint(0, X_train.shape[0], 100)
+                idx = np.random.randint(0, X_train.shape[0], 1)#100
                 real_imgs = X_train[idx]
-                real_ave_ps = produce_average_ps(real_imgs)
+                real_ave_ps,real_ps_std = produce_average_ps(real_imgs)
             if epoch % look_for_cnvrg_at == 0 and epoch != 0:
-                noise = np.random.normal(0, 1, (100, self.latent_dim))
+                noise = np.random.normal(0, 1, (1, self.latent_dim))#100
                 gen_imgs = self.generator.predict(noise)
-                fake_ave_ps = produce_average_ps(gen_imgs)
-                plt.plot(real_ave_ps,color="blue", label="real")
-                plt.plot(fake_ave_ps,color="orange", label="fake")
+                fake_ave_ps,fake_ps_std = produce_average_ps(gen_imgs)
+                plt.plot(real_ave_ps, color="blue", label="real")
+                plt.errorbar(x=[i for i in range(len(fake_ave_ps))], y=fake_ave_ps, yerr=fake_ps_std, color="orange", alpha=0.5, label="fake")
                 plt.legend()
                 if platform == "linux":
-                    #user = get_user()
                     plt.savefig(r"/home/" + user + r"/Important/Images/ave_ps_%d.png" % epoch)
                 else:
                     plt.savefig("images/ave_ps_%d.png" % epoch)
                 plt.close()
-                
+
                 if epoch == look_for_cnvrg_at:
-                    diff_sq_bfr = compare_ps(real_ave_ps,fake_ave_ps)
+                    #print(fake_ps_std)
+                    diff_sq_bfr = compare_ps(real_ave_ps,fake_ave_ps,fake_ps_std)
+                    #print(diff_sq_bfr)
                     mod_sq.append(diff_sq_bfr)
                     epoch_list2.append(epoch)
                 if epoch > look_for_cnvrg_at:
-                    diff_sq_aft = compare_ps(real_ave_ps,fake_ave_ps)
+                    diff_sq_aft = compare_ps(real_ave_ps,fake_ave_ps,fake_ps_std)
+                    #print(diff_sq_aft)
                     diff = (diff_sq_bfr-diff_sq_aft)/diff_sq_aft
                     mod_sq.append(diff_sq_aft)
                     epoch_list2.append(epoch)
-                    print('diff',diff)
                     diff_list.append(diff)
                     epoch_list.append(epoch)
                     diff_sq_bfr = diff_sq_aft
                     plt.plot(epoch_list,diff_list)
                     if platform == "linux":
-                        #user = get_user()
                         plt.savefig(r"/home/" + user + r"/Important/Images/convergence_test.png")
                     else:
                         plt.savefig("images/convergence_test")
                     plt.close()
                     plt.plot(epoch_list2,mod_sq)
+                    plt.yscale('log')
                     if platform == "linux":
                         plt.savefig(r"/home/" + user + r"/Important/Images/convergence_test2.png")
                     else:
                         plt.savefig("images/convergence_test2")
                     plt.close()
-            
 
-            #histogramms
+
+            #peak counts
             if epoch == 0:
-                idx = np.random.randint(0, X_train.shape[0], 500)
+                idx = np.random.randint(0, X_train.shape[0], 1)#500
                 real_imgs = X_train[idx]
-                real_count_list = get_pk_hist(real_imgs)    
+                real_count_list = get_pk_hist(real_imgs)
             if epoch % 100 == 0 and epoch != 0:
-                noise = np.random.normal(0, 1, (500, self.latent_dim))
+                noise = np.random.normal(0, 1, (1, self.latent_dim))#500
                 gen_imgs = self.generator.predict(noise)
                 fake_count_list = get_pk_hist(gen_imgs)
                 plt.hist(real_count_list, bins=100, color="blue", label="real", alpha=0.7)
                 plt.hist(fake_count_list, bins=100, color="orange", label="fake", alpha=0.7)
                 plt.legend()
                 if platform == "linux":
-                    #user = get_user()
                     plt.savefig(r"/home/" + user + r"/Important/Images/pk_%d.png" % epoch)
                 else:
                     plt.savefig("images/pk_%d.png" % epoch)
                 plt.close()
-                
-            
-#            if epoch == 0:
-#                hist_count_list_real = [[0]]*100
-#                hist_count_list_fake = [[0]]*100
-#                hist_count_list_i = 0
-#            count_list_real = get_pk_hist(imgs[0])
-#            count_list_fake = get_pk_hist(gen_imgs[0])
-#            print(count_list_real)
-#            hist_count_list_real[hist_count_list_i] = count_list_real
-#            hist_count_list_fake[hist_count_list_i] = count_list_fake
-#            hist_count_list_i = (hist_count_list_i + 1) % (100)
-#            if epoch % 10 == 0:
-#                for i in range(100):
-#                    if len(hist_count_list_real[i]) != 1:
-#                        if i == 0:
-#                            plt.hist(hist_count_list_real[i], color="blue", label="real", alpha=0.1, bins=20)
-#                            plt.hist(hist_count_list_fake[i], color="orange", label="fake", alpha=0.1, bins=20)
-#                        else:
-#                            plt.hist(hist_count_list_real[i], color="blue", alpha=0.1, bins=20)
-#                            plt.hist(hist_count_list_fake[i], color="orange", alpha=0.1, bins=20)
-#                plt.legend()
-#                if platform == "linux":
-#                    user = get_user()
-#                    plt.savefig(r"/home/" + user + r"/Important/Images/pk_%d.png" % epoch)
-#                else:
-#                    plt.savefig("images/pk_%d.png" % epoch)
-#                plt.close()
+
+
+            #pixel value histogram
+            find_pixel_val_at = 20
+            if epoch == 0:
+                idx = np.random.randint(0, X_train.shape[0], 1)
+                real_imgs = X_train[idx]
+                real_pix_val = get_pixel_val(real_imgs)
+            if epoch % find_pixel_val_at == 0 and epoch != 0:
+                noise = np.random.normal(0, 1, (1, self.latent_dim))
+                gen_imgs = self.generator.predict(noise)
+                fake_pix_val = get_pixel_val(gen_imgs)
+                plt.hist(real_pix_val, bins=100, color="blue", label="real", alpha=0.7)
+                plt.hist(fake_pix_val, bins=100, color="orange", label="fake", alpha=0.7)
+                plt.legend()
+                if platform == "linux":
+                    plt.savefig(r"/home/" + user + r"/Important/Images/pixel_val_%d.png" % epoch)
+                else:
+                    plt.savefig("images/pixel_val_%d.png" % epoch)
+                plt.close()
+
 
 
             # If at save interval => save generated image samples
@@ -480,7 +502,7 @@ class DCGAN():
             if platform == "linux":
                     #user = get_user()
                     plt.savefig(r"/home/" + user + r"/Important/Images/map_%d.png" % epoch)
-            
+
             else:
                 fig.savefig("images/map_%d.png" % epoch)
         plt.close()
@@ -507,7 +529,7 @@ class DCGAN():
 
 
 if __name__ == '__main__':
-    
+
     dcgan = DCGAN()
 dcgan.train(epochs=4000, batch_size=16, save_interval=5)
 dcgan.save_models()
@@ -517,4 +539,3 @@ dcgan.save_models()
 # run same code on density field rather then ionized field to see if there are still two peaks
 # in peak count
 # primarily look at power spectrum
-
