@@ -121,7 +121,7 @@ def get_pk_hist(slices):
                     if done == True: break
                     for q in range(-2,3):
                         if done == True: break
-                        if p != 0 and q != 0: #dont compare with middle cell
+                        if p != 0 or q != 0: #dont compare with middle cell
                             neighbour = slc[j+p,k+q]
                             if neighbour > middle:
                                 largest = False
