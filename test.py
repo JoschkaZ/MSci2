@@ -1,4 +1,7 @@
-
+import os
+os.getcwd()
+os.chdir(r"C:\Users\Joschka\github\MSci2")
+#%%
 # IMPORTS
 import importlib
 import numpy as np
@@ -36,14 +39,25 @@ utils.change_parameter('ZETA_X', '3.0e56')
 utils.run_commands(commands)
 
 
-# %%
+#%%
 
 mypath = 'C:\\'
 onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 print(onlyfiles)
 
-# %% try chaning parameter
+#%% try chaning parameter
 
 utils.change_parameter('drive_zscroll_noTs ZSTART', '9')
 utils.change_parameter('drive_zscroll_noTs ZEND', '9')
 utils.change_parameter('RANDOM_SEED', '123')
+
+
+
+
+#%% get boxes
+
+boxnames = utils.get_delta_T_boxes(mypath='C:\Outputs\Outputs')
+print(boxnames)
+print(len(boxnames))
+#%%
+utils.boxes_to_list_of_slices(boxnames, mypath='C:\Outputs\Outputs')

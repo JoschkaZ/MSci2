@@ -20,7 +20,8 @@ def get_path():
     if platform == "darwin":
         return r'/Users/HirokazuKatori/Desktop/Msci Project'
     elif platform == "linux":
-        return r'/home/jz8415/21cmFAST-master'
+        user = get_user()
+        return r'/home/' + user + r'/21cmFAST-master'
     else:
         return r'C:\21cmFAST\21cmFAST-master'
 
@@ -288,11 +289,12 @@ def zip_boxes(box_names, archive_name, verbose=1):
 
     return 1
 
-def boxes_to_list_of_slices(box_names, limit=None):
+def boxes_to_list_of_slices(box_names, limit=None, mypath=''):
 
 
-    user = get_user()
-    mypath =  r'/home/' + user + r'/Outputs'
+    if mypath == '':
+        user = get_user()
+        mypath =  r'/home/' + user + r'/Outputs'
     slices = []
 
     if limit== None: limit = len(box_names)
