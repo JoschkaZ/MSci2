@@ -1,5 +1,5 @@
-from __future__ import print_function, division
 
+from __future__ import print_function, division
 from keras.datasets import mnist
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout
 from keras.layers import BatchNormalization, Activation, ZeroPadding2D, Cropping2D
@@ -9,19 +9,74 @@ from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
-
 import matplotlib.pyplot as plt
-
 import sys
 from sys import platform
-
 import numpy as np
 from scipy.misc import imresize
 import pickle
+import tensorflow as tf
 
 #if platform == "linux":
  #   %run utils.ipynb
   #  user = get_user()
+
+
+def crossraPsd2d(img1,img2,show=False):
+    s1 = len(img1)
+    s2 = len(img2)
+
+
+    #a = np.random.randint(2, size=(10,10))
+    #k = [[1,1,1],[1,1,1],[1,1,1]]
+
+    tensor_a = tf.constant(img1, tf.float32)
+    tensor_k = tf.constant(img2, tf.float32)
+    conv = tf.nn.convolution(
+    tf.reshape(tensor_a, [1, s1, s1, 1]),
+    tf.reshape(tensor_k, [s2, s2, 1, 1]),
+    #use_cudnn_on_gpu=True,
+    padding='SAME')
+    conv = tf.Session().run(conv)
+    conv = np.reshape(conv,(s1,s1))
+
+
+    k = np.ones((s1,s1))
+    print(k)
+    tensor_a = tf.constant(k, tf.float32)
+    tensor_k = tf.constant(k, tf.float32)
+    convc = tf.nn.convolution(
+    tf.reshape(tensor_a, [1, s1, s1, 1]),
+    tf.reshape(tensor_k, [s1, s1, 1, 1]),
+    #use_cudnn_on_gpu=True,
+    padding='SAME')
+    convc = tf.Session().run(convc)
+    convc = np.reshape(convc,(s1,s1))
+
+    conv = conv / convc
+
+
+
+    if show == True:
+        plt.imshow(img1)
+        plt.show()
+        plt.imshow(img2)
+        plt.show()
+        plt.imshow(conv)
+        plt.show()
+        plt.imshow(convc)
+        plt.show()
+
+    S = raPsd2d(conv,s1,show=show)
+
+    return S
+
+
+
+
+
+
+
 
 
 def raPsd2d(img, res, show=False):
@@ -531,8 +586,8 @@ class DCGAN():
 if __name__ == '__main__':
 
     dcgan = DCGAN()
-dcgan.train(epochs=4000, batch_size=16, save_interval=5)
-dcgan.save_models()
+    dcgan.train(epochs=4000, batch_size=16, save_interval=5)
+    dcgan.save_models()
 
 
 
