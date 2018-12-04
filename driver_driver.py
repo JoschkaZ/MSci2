@@ -7,7 +7,7 @@ importlib.reload(utils)
 
 zip_name = 'single_redshift'
 
-seeds = range(100)
+seeds = range(1)
 for seed in seeds:
     print('###################################################################')
     print('###################################################################')
@@ -26,9 +26,9 @@ for seed in seeds:
     #change some parameters
     utils.change_parameter('ZETA_X', 'default')
     utils.change_parameter('RANDOM_SEED', str(seed))
-    utils.change_parameter('drive_zscroll_noTs ZSTART', 9)
-    utils.change_parameter('drive_zscroll_noTs ZEND', 9)
-
+    utils.change_parameter('drive_zscroll_noTs ZSTART', 11) # 8
+    utils.change_parameter('drive_zscroll_noTs ZEND', 12)
+    utils.change_parameter('drive_zscroll_noTs ZSTEP', -1)
     #run driver
     #commands = ['make', './drive_logZscroll_Ts']
     commands = ['make', './drive_zscroll_noTs']
