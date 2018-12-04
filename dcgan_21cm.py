@@ -130,11 +130,6 @@ def raPsd2d(img, res, show=False):
         plt.show()
 
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 90a9b695c1d6a3d26377c4c8fb629cfe205c0e01
     return S,k_list
 
 
