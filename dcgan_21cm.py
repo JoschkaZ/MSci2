@@ -1,4 +1,3 @@
-
 from __future__ import print_function, division
 from keras.datasets import mnist
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout
@@ -17,10 +16,11 @@ from scipy.misc import imresize
 import pickle
 import tensorflow as tf
 
-#if platform == "linux":
- #   %run utils.ipynb
-  #  user = get_user()
-
+"""
+if platform == "linux":
+    %run utils.ipynb
+    user = get_user()
+"""
 
 def crossraPsd2d(img1,img2,show=False):
     s1 = len(img1)
@@ -42,7 +42,7 @@ def crossraPsd2d(img1,img2,show=False):
 
 
     k = np.ones((s1,s1))
-    print(k)
+    #print(k)
     tensor_a = tf.constant(k, tf.float32)
     tensor_k = tf.constant(k, tf.float32)
     convc = tf.nn.convolution(
@@ -67,9 +67,9 @@ def crossraPsd2d(img1,img2,show=False):
         plt.imshow(convc)
         plt.show()
 
-    S = raPsd2d(conv,s1,show=show)
+    S,k_list = raPsd2d(conv,s1,show=show)
 
-    return S
+    return S,k_list
 
 
 
@@ -91,6 +91,7 @@ def raPsd2d(img, res, show=False):
 
     S = np.zeros(128)
     C = np.zeros(128)
+    k_list = []
     for i in range(256):
         for j in range(256):
 
@@ -109,6 +110,9 @@ def raPsd2d(img, res, show=False):
             S[i] = 0
         else:
             S[i] = S[i] / C[i]
+        k = (128-i)*(2**(0.5))*(1.*2*np.pi/300)
+        k_list.append(k)
+        #S[i] = S[i]
 
     if show == True:
         print('Original')
@@ -125,8 +129,12 @@ def raPsd2d(img, res, show=False):
         plt.colorbar()
         plt.show()
 
+<<<<<<< HEAD
 
     return S
+=======
+    return S,k_list
+>>>>>>> c141f5685b95627f750ab544c3df5caa02535a9a
 
 def produce_average_ps(slices):
     PS = np.zeros(127) #the first value of the PS is always zero so ignore that
@@ -138,21 +146,25 @@ def produce_average_ps(slices):
 
     for i in range(N):
         slc = slices[i]
-        S = raPsd2d(slc,(256,256))
+        S,k_list = raPsd2d(slc,(256,256))
         S = S[1:] #ignore the first element in PS becuase its always zero
-        S0.append(S[0])
-        S1.append(S[1])
+        #k_list = k_list[1:]
+        #S0.append(S[0])
+        #S1.append(S[1])
         PS = np.add(PS,S)
         for j in range(len(S)):
             values_list[j].append(S[j])
     PS = PS / N
+    #print(len(k_list))
+    k_list = k_list[1:]
+    #print(len(k_list))
     #print(S0)
     #print(S1)
 
     for k in range(len(values_list)):
         std = np.std(values_list[k])
         std_list.append(std)
-    return PS,std_list
+    return PS,std_list,k_list
 
 def compare_ps(real_PS,fake_PS,fake_ps_std):
     diff = np.subtract(real_PS,fake_PS)
@@ -178,7 +190,7 @@ def get_pk_hist(slices):
                     if done == True: break
                     for q in range(-2,3):
                         if done == True: break
-                        if p != 0 and q != 0: #dont compare with middle cell
+                        if p != 0 or q != 0: #dont compare with middle cell
                             neighbour = slc[j+p,k+q]
                             if neighbour > middle:
                                 largest = False
@@ -417,12 +429,12 @@ class DCGAN():
                 hist_PSD_real = [[0]]*100
                 hist_PSD_fake = [[0]]*100
                 hist_PSD_i = 0
-            PSD_real = raPsd2d(imgs[0], (256,256))
-            PSD_fake = raPsd2d(gen_imgs[0], (256,256))
+            PSD_real,k_list_rl= raPsd2d(imgs[0], (256,256))
+            PSD_fake,k_list_fk = raPsd2d(gen_imgs[0], (256,256))
             hist_PSD_real[hist_PSD_i] = PSD_real
             hist_PSD_fake[hist_PSD_i] = PSD_fake
             hist_PSD_i = (hist_PSD_i + 1) % (100)
-            if epoch % (50) == 0:
+            if epoch % (100) == 0:
                 for i in range(100):
                     if len(hist_PSD_real[i]) != 1:
                         if i == 0:
@@ -438,17 +450,19 @@ class DCGAN():
                     plt.savefig("images/ps_%d.png" % epoch)
                 plt.close()
 
-            look_for_cnvrg_at = 50
+            look_for_cnvrg_at = 100
             if epoch == 0:
-                idx = np.random.randint(0, X_train.shape[0], 1)#100
+                idx = np.random.randint(0, X_train.shape[0], 100)#100
                 real_imgs = X_train[idx]
-                real_ave_ps,real_ps_std = produce_average_ps(real_imgs)
+                real_ave_ps,real_ps_std,k_list_real = produce_average_ps(real_imgs)
             if epoch % look_for_cnvrg_at == 0 and epoch != 0:
-                noise = np.random.normal(0, 1, (1, self.latent_dim))#100
+                noise = np.random.normal(0, 1, (100, self.latent_dim))#100
                 gen_imgs = self.generator.predict(noise)
-                fake_ave_ps,fake_ps_std = produce_average_ps(gen_imgs)
-                plt.plot(real_ave_ps, color="blue", label="real")
-                plt.errorbar(x=[i for i in range(len(fake_ave_ps))], y=fake_ave_ps, yerr=fake_ps_std, color="orange", alpha=0.5, label="fake")
+                fake_ave_ps,fake_ps_std,k_list_fake = produce_average_ps(gen_imgs)
+                plt.plot(k_list_real,real_ave_ps, color="blue", label="real")
+                plt.yscale('log')
+                plt.errorbar(x=k_list_fake, y=fake_ave_ps, yerr=fake_ps_std, color="orange", alpha=0.5, label="fake")
+                plt.yscale('log')
                 plt.legend()
                 if platform == "linux":
                     plt.savefig(r"/home/" + user + r"/Important/Images/ave_ps_%d.png" % epoch)
@@ -488,11 +502,11 @@ class DCGAN():
 
             #peak counts
             if epoch == 0:
-                idx = np.random.randint(0, X_train.shape[0], 1)#500
+                idx = np.random.randint(0, X_train.shape[0], 500)#500
                 real_imgs = X_train[idx]
                 real_count_list = get_pk_hist(real_imgs)
             if epoch % 100 == 0 and epoch != 0:
-                noise = np.random.normal(0, 1, (1, self.latent_dim))#500
+                noise = np.random.normal(0, 1, (500, self.latent_dim))#500
                 gen_imgs = self.generator.predict(noise)
                 fake_count_list = get_pk_hist(gen_imgs)
                 plt.hist(real_count_list, bins=100, color="blue", label="real", alpha=0.7)
@@ -506,7 +520,7 @@ class DCGAN():
 
 
             #pixel value histogram
-            find_pixel_val_at = 20
+            find_pixel_val_at = 100
             if epoch == 0:
                 idx = np.random.randint(0, X_train.shape[0], 1)
                 real_imgs = X_train[idx]
@@ -524,6 +538,20 @@ class DCGAN():
                     plt.savefig("images/pixel_val_%d.png" % epoch)
                 plt.close()
 
+            #cross ps
+            if epoch % 100 == 0:
+                idx = np.random.randint(0, X_train.shape[0], 1)
+                real_im = X_train[idx][0]
+                noise = np.random.normal(0, 1, (1, self.latent_dim))
+                fake_im = self.generator.predict(noise)[0]
+
+                CPS,k_lst = crossraPsd2d(real_im,fake_im)
+                plt.plot(k_lst,CPS)
+                if platform == "linux":
+                    plt.savefig(r"/home/" + user + r"/Important/Images/cross_ps_%d.png" % epoch)
+                else:
+                    plt.savefig("images/cross_ps_%d.png" % epoch)
+                plt.close()
 
 
             # If at save interval => save generated image samples
@@ -588,7 +616,7 @@ class DCGAN():
 if __name__ == '__main__':
 
     dcgan = DCGAN()
-    dcgan.train(epochs=4000, batch_size=16, save_interval=5)
+    dcgan.train(epochs=4000, batch_size=16, save_interval=50)
     dcgan.save_models()
 
 
