@@ -106,13 +106,13 @@ def raPsd2d(img, res, show=False):
                 C[r] += 1
 
     for i in range(128):
+        k = i*(1.*2*np.pi/300)
         if C[i] == 0:
             S[i] = 0
         else:
-            S[i] = S[i] / C[i]
-        k = (128-i)*(2**(0.5))*(1.*2*np.pi/300)
+            S[i] = k**2 * S[i] / C[i]
+
         k_list.append(k)
-        #S[i] = S[i]
 
     if show == True:
         print('Original')
@@ -129,12 +129,9 @@ def raPsd2d(img, res, show=False):
         plt.colorbar()
         plt.show()
 
-<<<<<<< HEAD
 
-    return S
-=======
     return S,k_list
->>>>>>> c141f5685b95627f750ab544c3df5caa02535a9a
+
 
 def produce_average_ps(slices):
     PS = np.zeros(127) #the first value of the PS is always zero so ignore that
