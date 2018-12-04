@@ -129,12 +129,11 @@ def raPsd2d(img, res, show=False):
         plt.colorbar()
         plt.show()
 
-<<<<<<< HEAD
 
-    return S
-=======
+
+
     return S,k_list
->>>>>>> c141f5685b95627f750ab544c3df5caa02535a9a
+
 
 def produce_average_ps(slices):
     PS = np.zeros(127) #the first value of the PS is always zero so ignore that

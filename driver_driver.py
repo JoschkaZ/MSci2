@@ -26,8 +26,8 @@ for seed in seeds:
     #change some parameters
     utils.change_parameter('ZETA_X', 'default')
     utils.change_parameter('RANDOM_SEED', str(seed))
-    utils.change_parameter('drive_zscroll_noTs ZSTART', 11) # 8
-    utils.change_parameter('drive_zscroll_noTs ZEND', 12)
+    utils.change_parameter('drive_zscroll_noTs ZSTART', 12) # 8
+    utils.change_parameter('drive_zscroll_noTs ZEND', 11)
     utils.change_parameter('drive_zscroll_noTs ZSTEP', -1)
     #run driver
     #commands = ['make', './drive_logZscroll_Ts']
