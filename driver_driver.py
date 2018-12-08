@@ -2,18 +2,24 @@
 import importlib
 import numpy as np
 import utils
+import datetime
 importlib.reload(utils)
 
 
-zip_name = 'single_redshift'
+#zip_name = 'single_redshift'
 
 seeds = range(1)
-for seed in seeds:
+ZSTART = 12
+ZEND = 11
+ZSTEP = -1
+ZETA_X = 'default'
+
+for SEED in seeds:
     print('###################################################################')
     print('###################################################################')
     print('###################################################################')
 
-    print('using seed ', seed)
+    print('using seed ', SEED)
 
     #clean box folder
     utils.clear_box_directory()
@@ -24,22 +30,25 @@ for seed in seeds:
     utils.run_commands(commands)
 
     #change some parameters
-    utils.change_parameter('ZETA_X', 'default')
-    utils.change_parameter('RANDOM_SEED', str(seed))
-    utils.change_parameter('drive_zscroll_noTs ZSTART', 12) # 8
-    utils.change_parameter('drive_zscroll_noTs ZEND', 11)
-    utils.change_parameter('drive_zscroll_noTs ZSTEP', -1)
+    utils.change_parameter('ZETA_X', ZETA_X)
+    utils.change_parameter('RANDOM_SEED', str(SEED))
+    utils.change_parameter('drive_zscroll_noTs ZSTART', ZSTART) # 8
+    utils.change_parameter('drive_zscroll_noTs ZEND', ZEND)
+    utils.change_parameter('drive_zscroll_noTs ZSTEP', ZSTEP)
     #run driver
     #commands = ['make', './drive_logZscroll_Ts']
     commands = ['make', './drive_zscroll_noTs']
     utils.run_commands(commands)
 
-    #zip all delta_T_boxes
+    #rename and zip all delta_T_boxes
     utils.cd_to_boxes()
     box_names = utils.get_delta_T_boxes()
+    param_string = 'SEED'+SEED+'_ZSTART'+ZSTART+'_ZEND'+ZEND+'_ZSTEP'+ZSTEP+'_ZETA_X'+ZETA_X
+    box_names = utils.rename_boxes(box_names, param_string)
 
-    archive_name = zip_name + '_' + str(seed) #DEFINE ARCHIVE NAME
-    print('ARCHIVE_NAME', archive_name)
+    #archive_name = zip_name + '_' + str(SEED) #DEFINE ARCHIVE NAME
+    archive_name = str(datetime.datetime.now())+'_'+param_string
+    #print('ARCHIVE_NAME', archive_name)
     utils.zip_boxes(box_names, archive_name)
 
 
