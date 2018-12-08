@@ -71,7 +71,8 @@ img1 = [[1,1,1], [1,1,1], [1,1,1]]
 img2 = [[1,1,1], [1,1,1], [1,1,1]]
 
 img1 = box[0]
-img2 = box[128]
+img2 = box[1]
+
 
 img1 = np.zeros((256,256))
 for x in range(256):
@@ -79,9 +80,10 @@ for x in range(256):
         r = np.sqrt(1.*(x-128)**2+(y-128)**2)
         r = x
         img1[x][y] = np.sin(50*r/150. + np.random.normal(0,0)) + np.sin(300*r/150. + np.random.normal(0,0))
-img2 = img1
-#S = dcgan_21cm.crossraPsd2d(img1,img2,show=True)
-test = dcgan_21cm.raPsd2d(img1, 256,show=True)
+
+
+S = dcgan_21cm.crossraPsd2d(img1,img2,show=True)
+#test = dcgan_21cm.raPsd2d(img1, 256,show=True)
 #%%
 plt.semilogy(S[:])
 plt.show()

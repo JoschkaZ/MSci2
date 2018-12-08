@@ -266,6 +266,19 @@ def get_delta_T_boxes(verbose=1, mypath=''):
 
     return temp
 
+def rename_boxes(box_names, param_string, sverbose=1):
+    user = get_user()
+
+    commands = [] #mv /home/user/Files/filename1.ext /home/user/Files/filename2.ext
+    for box_name in box_names:
+        new_box_name = param_string + '_' + box_name
+        commands.append(
+        'mv '+archive_name+'.zip '+r'/home/'+user+r'/21cmFAST-master/Boxes/'+box_name+ r' /home/'+user+r'/21cmFAST-master/Boxes/'+new_box_name)
+    run_commands(commands)
+
+    return 1
+
+
 def zip_boxes(box_names, archive_name, verbose=1):
     user = get_user()
 

@@ -116,16 +116,16 @@ def raPsd2d(img, res, show=False):
 
     if show == True:
         print('Original')
-        plt.imshow((np.abs(img)), cmap='hot', interpolation='nearest')
+        plt.imshow(np.log(np.abs(img)), cmap='hot', interpolation='nearest')
         plt.show()
         print('Fourier')
-        plt.imshow((np.abs(imgf)), cmap='hot', interpolation='nearest')
+        plt.imshow(np.log(np.abs(imgf)), cmap='hot', interpolation='nearest')
         plt.show()
         print('Fourier + Shift')
-        plt.imshow((np.abs(imgfs)), cmap='hot', interpolation='nearest')
+        plt.imshow(np.log(np.abs(imgfs)), cmap='hot', interpolation='nearest')
         plt.show()
         print('Fourier + Shift + Squared')
-        plt.imshow((np.abs(imgfsp)), cmap='hot', interpolation='nearest')
+        plt.imshow(np.log(np.abs(imgfsp)), cmap='hot', interpolation='nearest')
         plt.colorbar()
         plt.show()
 
