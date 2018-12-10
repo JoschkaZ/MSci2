@@ -43,7 +43,7 @@ for SEED in seeds:
     #rename and zip all delta_T_boxes
     utils.cd_to_boxes()
     box_names = utils.get_delta_T_boxes()
-    param_string = 'SEED'+SEED+'_ZSTART'+ZSTART+'_ZEND'+ZEND+'_ZSTEP'+ZSTEP+'_ZETA_X'+ZETA_X
+    param_string = 'SEED'+str(SEED)+'_ZSTART'+str(ZSTART)+'_ZEND'+str(ZEND)+'_ZSTEP'+str(ZSTEP)+'_ZETA_X'+str(ZETA_X)
     box_names = utils.rename_boxes(box_names, param_string)
 
     #archive_name = zip_name + '_' + str(SEED) #DEFINE ARCHIVE NAME
