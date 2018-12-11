@@ -271,7 +271,7 @@ def rename_boxes(box_names, param_string, verbose=1):
     user = get_user()
 
     commands = [] #mv /home/user/Files/filename1.ext /home/user/Files/filename2.ext
-    new_boxnames = []
+    new_box_names = []
     for box_name in box_names:
         new_box_name = param_string + '_' + box_name
         new_box_names.append(new_box_name)
