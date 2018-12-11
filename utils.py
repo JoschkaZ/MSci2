@@ -299,7 +299,7 @@ def zip_boxes(box_names, archive_name, verbose=1):
     print('archive name ', archive_name)
     # zip boxes
     commands = [
-    'zip '+ archive_name +' -@ < out.txt', #zip all files listed in out.txt
+    'zip '+ archive_name +'.zip -@ < out.txt', #zip all files listed in out.txt
     'mv '+archive_name+'.zip ' + '/home/'+user+r'/Outputs/'] # move archive.zip
     run_commands(commands)
 
