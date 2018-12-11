@@ -47,7 +47,7 @@ for SEED in seeds:
     box_names = utils.rename_boxes(box_names, param_string)
 
     #archive_name = zip_name + '_' + str(SEED) #DEFINE ARCHIVE NAME
-    archive_name = str(datetime.datetime.now())+'_'+param_string
+    archive_name = str(datetime.datetime.now()).replace(' ','_')+'_'+param_string
     #print('ARCHIVE_NAME', archive_name)
     utils.zip_boxes(box_names, archive_name)
 
