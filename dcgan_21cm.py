@@ -18,17 +18,26 @@ from scipy.misc import imresize
 import pickle
 import tensorflow as tf
 
+<<<<<<< HEAD
 '''
 if platform == "linux":
     %run utils.ipynb
     user = get_user()
 '''
+=======
+"""
+if platform == "linux":
+    %run utils.ipynb
+    user = get_user()
+"""
+>>>>>>> 43abf2f9067e47b58665b42b2b7abb86ecfdcd14
 
 def crossraPsd2d(img1,img2,show=False):
     s1 = len(img1)
     s2 = len(img2)
 
-
+    img1 = np.array(img1) - np.mean(img1)
+    img2 = np.array(img2) - np.mean(img2)
     #a = np.random.randint(2, size=(10,10))
     #k = [[1,1,1],[1,1,1],[1,1,1]]
 
@@ -62,6 +71,7 @@ def crossraPsd2d(img1,img2,show=False):
     imgf = conv
     imgfs = conv
     S = np.zeros(128)
+    Sconv = np.zeros(128)
     C = np.zeros(128)
     k_list = []
     for i in range(256):
@@ -75,15 +85,21 @@ def crossraPsd2d(img1,img2,show=False):
 
             if r <= 127:
                 S[r] += imgfs[i][j]
+                Sconv += conv[i][j]
                 C[r] += 1
 
     for i in range(128):
         k = i*(1.*2*np.pi/300)
         if C[i] == 0:
             S[i] = 0
+            Sconv[i] = 0
         else:
             print(k**2 * S[i] / C[i])
             S[i] = np.real(k**0 * S[i] / C[i])
+<<<<<<< HEAD
+=======
+            Sconv[i] = np.real(k**0 * Sconv[i] / C[i])
+>>>>>>> 43abf2f9067e47b58665b42b2b7abb86ecfdcd14
 
         k_list.append(k)
 
@@ -103,7 +119,7 @@ def crossraPsd2d(img1,img2,show=False):
 
 
 
-    return S,k_list
+    return S,Sconv,k_list
 
 
 
@@ -534,7 +550,7 @@ class DCGAN():
                 plt.close()
 
             """
-
+            """
             look_for_cnvrg_at = 500
             if epoch == 0:
                 idx = np.random.randint(0, X_train.shape[0], 100)#100
@@ -709,7 +725,7 @@ class DCGAN():
                     plt.savefig("images/pixel_val_kolmogorov.png")
                 plt.close()
 
-
+            """
             #cross ps
             if epoch % 10 == 0:
                 idx = np.random.randint(0, X_train.shape[0], 1)
@@ -717,13 +733,24 @@ class DCGAN():
                 noise = np.random.normal(0, 1, (1, self.latent_dim))
                 fake_im = self.generator.predict(noise)[0]
 
-                #CPS,k_lst = crossraPsd2d(real_im,fake_im)
-                CPS,k_lst = crossraPsd2d(real_im,real_im)
+                #cross ps with FT
+                CPS,CPSconv,k_lst = crossraPsd2d(real_im,fake_im)
+                #CPS,CPSconv,k_lst = crossraPsd2d(real_im,real_im)
                 plt.plot(k_lst,CPS)
                 if platform == "linux":
-                    plt.savefig(r"/home/" + user + r"/Important/Images/cross_ps_%d.png" % epoch)
+                    plt.savefig(r"/home/" + user + r"/Important/Images/cross_ps_FT_%d.png" % epoch)
                 else:
-                    plt.savefig("images/cross_ps_%d.png" % epoch)
+                    plt.savefig("images/cross_ps_FT_%d.png" % epoch)
+                plt.close()
+
+                #cross ps with conv
+                CPS,CPSconv,k_lst = crossraPsd2d(real_im,fake_im)
+                #CPS,CPSconv,k_lst = crossraPsd2d(real_im,real_im)
+                plt.plot(k_lst,CPSconv)
+                if platform == "linux":
+                    plt.savefig(r"/home/" + user + r"/Important/Images/cross_ps_conv_%d.png" % epoch)
+                else:
+                    plt.savefig("images/cross_ps_conv_%d.png" % epoch)
                 plt.close()
 
 
