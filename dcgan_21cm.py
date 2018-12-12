@@ -18,10 +18,11 @@ from scipy.misc import imresize
 import pickle
 import tensorflow as tf
 
+'''
 if platform == "linux":
     %run utils.ipynb
     user = get_user()
-
+'''
 
 def crossraPsd2d(img1,img2,show=False):
     s1 = len(img1)
@@ -58,6 +59,8 @@ def crossraPsd2d(img1,img2,show=False):
 
     imgf = np.fft.fft2(conv)
     imgfs = np.fft.fftshift(imgf)
+    imgf = conv
+    imgfs = conv
     S = np.zeros(128)
     C = np.zeros(128)
     k_list = []
@@ -80,7 +83,7 @@ def crossraPsd2d(img1,img2,show=False):
             S[i] = 0
         else:
             print(k**2 * S[i] / C[i])
-            S[i] = np.real(k**2 * S[i] / C[i])
+            S[i] = np.real(k**0 * S[i] / C[i])
 
         k_list.append(k)
 
@@ -92,6 +95,8 @@ def crossraPsd2d(img1,img2,show=False):
         plt.imshow(conv)
         plt.show()
         plt.imshow(convc)
+        plt.show()
+        plt.imshow(np.log(abs(imgfs)))
         plt.show()
 
     #S,k_list = raPsd2d(conv,s1,show=show)
