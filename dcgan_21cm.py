@@ -12,15 +12,16 @@ import matplotlib.pyplot as plt
 import sys
 from sys import platform
 import numpy as np
+import scipy
+from scipy import stats
 from scipy.misc import imresize
 import pickle
 import tensorflow as tf
 
-"""
 if platform == "linux":
     %run utils.ipynb
     user = get_user()
-"""
+
 
 def crossraPsd2d(img1,img2,show=False):
     s1 = len(img1)
@@ -55,7 +56,33 @@ def crossraPsd2d(img1,img2,show=False):
 
     conv = conv / convc
 
+    imgf = np.fft.fft2(conv)
+    imgfs = np.fft.fftshift(imgf)
+    S = np.zeros(128)
+    C = np.zeros(128)
+    k_list = []
+    for i in range(256):
+        for j in range(256):
 
+            i2 = i - (256.-1)/2.
+            j2 = j - (256.-1)/2.
+
+            r = int(np.round(np.sqrt(i2**2+j2**2)))
+
+
+            if r <= 127:
+                S[r] += imgfs[i][j]
+                C[r] += 1
+
+    for i in range(128):
+        k = i*(1.*2*np.pi/300)
+        if C[i] == 0:
+            S[i] = 0
+        else:
+            print(k**2 * S[i] / C[i])
+            S[i] = np.real(k**2 * S[i] / C[i])
+
+        k_list.append(k)
 
     if show == True:
         plt.imshow(img1)
@@ -67,7 +94,9 @@ def crossraPsd2d(img1,img2,show=False):
         plt.imshow(convc)
         plt.show()
 
-    S,k_list = raPsd2d(conv,s1,show=show)
+    #S,k_list = raPsd2d(conv,s1,show=show)
+
+
 
     return S,k_list
 
@@ -86,7 +115,7 @@ def raPsd2d(img, res, show=False):
     #compute power spectrum
     imgf = np.fft.fft2(img)
     imgfs = np.fft.fftshift(imgf)
-    imgfsp = (np.abs(imgfs) / (1.*256*256)) **2.
+    imgfsp = (np.abs(imgfs)) **2.
     #print(np.shape(imgfsp))
 
     S = np.zeros(128)
@@ -126,11 +155,10 @@ def raPsd2d(img, res, show=False):
         plt.show()
         print('Fourier + Shift + Squared')
         plt.imshow(np.log(np.abs(imgfsp)), cmap='hot', interpolation='nearest')
-        plt.colorbar()
         plt.show()
 
-
     return S,k_list
+
 
 
 def produce_average_ps(slices):
@@ -163,13 +191,17 @@ def produce_average_ps(slices):
         std_list.append(std)
     return PS,std_list,k_list
 
-def compare_ps(real_PS,fake_PS,fake_ps_std):
+
+
+def compare_ps(real_PS,fake_PS,ps_std):
     diff = np.subtract(real_PS,fake_PS)
     for i in range(len(diff)):
-        diff[i] = (1.*diff[i])/fake_ps_std[i]
+        diff[i] = (1.*diff[i])/ps_std[i]
     mod_diff2 = diff**2
     tot_diff = np.sum(mod_diff2)
     return tot_diff
+
+
 
 def get_pk_hist(slices):
     N = len(slices)
@@ -189,13 +221,39 @@ def get_pk_hist(slices):
                         if done == True: break
                         if p != 0 or q != 0: #dont compare with middle cell
                             neighbour = slc[j+p,k+q]
-                            if neighbour > middle:
+                            if neighbour >= middle:##################what if the peak is more than a pixek big
                                 largest = False
                                 done = True
                 if largest == True:
                     counts.append(middle)
         count_list.append(len(counts))
     return count_list
+
+
+def get_peak_vs_brightness(slices):
+    N = len(slices)
+    brightness_list = []
+
+    for i in range(N):
+        slc = slices[i]
+        for j in range(2,np.shape(slc)[0]-2): #dont consider edge rows
+            for k in range(2,np.shape(slc)[1]-2): #dont consider edge columns
+                middle = slc[j,k] #middle cell that we are considering
+                largest = True #set middle cell to be the largest out of neighbours
+                done = False
+                for p in range(-2,3):
+                    if done == True: break
+                    for q in range(-2,3):
+                        if done == True: break
+                        if p != 0 or q != 0: #dont compare with middle cell
+                            neighbour = slc[j+p,k+q]
+                            if neighbour >= middle:
+                                largest = False
+                                done = True
+                if largest == True:
+                    brightness_list.append(middle[0])
+    return brightness_list
+
 
 def get_pixel_val(slices):
     N = len(slices)
@@ -208,6 +266,32 @@ def get_pixel_val(slices):
                 elem.append(slc[j,k][0])
 
     return elem
+
+"""
+def kolmogorov(reallist,fakelist):
+    n_bins = 100
+    fig, ax = plt.subplots(figsize=(8,4))
+
+    #plot the real cumulative histogram
+    nreal, realbins, realpatches = ax.hist(reallist, n_bins, density=True, histtype='step', cumulative=True, label='Real')
+    #plot the fake cumulative histogram
+    nfake, fakebins, fakepatches = ax.hist(fakelist, n_bins, density=True, histtype='step', cumulative=True, label='Fake')
+    plt.legend()
+
+    p_val = scipy.stats.ks_2samp(reallist,fakelist)
+
+    n = len(reallist)
+    m = len(fakelist)
+    D = 0.
+    c_alpha = np.sqrt(-0.5 * np.log(alpha))
+    rjct = c_alpha * np.sqrt((1.*(n+m))/(n*m))
+    for i in range(len(nreal)):
+        d = abs(nreal[i]-nfake[i]) ###can i take the magnitude???
+        if d > D:
+            D = d
+
+    return p_val#,fig
+"""
 
 class DCGAN():
     def __init__(self):
@@ -378,10 +462,7 @@ class DCGAN():
         d_loss = [1,0]
         i = 0
 
-        diff_list = []
-        mod_sq = []
-        epoch_list = []
-        epoch_list2 = []
+        #diff_list = []
         for epoch in range(epochs):
 
             # ---------------------
@@ -420,7 +501,7 @@ class DCGAN():
             # Plot the progress
             print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[1], g_loss))
 
-
+            """
             # power spectrum stuff
             if epoch == 0:
                 hist_PSD_real = [[0]]*100
@@ -447,11 +528,20 @@ class DCGAN():
                     plt.savefig("images/ps_%d.png" % epoch)
                 plt.close()
 
-            look_for_cnvrg_at = 100
+            """
+
+            look_for_cnvrg_at = 500
             if epoch == 0:
                 idx = np.random.randint(0, X_train.shape[0], 100)#100
                 real_imgs = X_train[idx]
                 real_ave_ps,real_ps_std,k_list_real = produce_average_ps(real_imgs)
+
+                mod_sq_fake_std = []
+                mod_sq_real_std = []
+                mod_sq_comb_std = []
+                #epoch_list = []
+                epoch_list2 = []
+
             if epoch % look_for_cnvrg_at == 0 and epoch != 0:
                 noise = np.random.normal(0, 1, (100, self.latent_dim))#100
                 gen_imgs = self.generator.predict(noise)
@@ -467,42 +557,72 @@ class DCGAN():
                     plt.savefig("images/ave_ps_%d.png" % epoch)
                 plt.close()
 
-                if epoch == look_for_cnvrg_at:
-                    #print(fake_ps_std)
-                    diff_sq_bfr = compare_ps(real_ave_ps,fake_ave_ps,fake_ps_std)
-                    #print(diff_sq_bfr)
-                    mod_sq.append(diff_sq_bfr)
-                    epoch_list2.append(epoch)
-                if epoch > look_for_cnvrg_at:
-                    diff_sq_aft = compare_ps(real_ave_ps,fake_ave_ps,fake_ps_std)
+                epoch_list2.append(epoch)
+                ##convergence test using fake std
+                diff_sq_fake_std = compare_ps(real_ave_ps,fake_ave_ps,fake_ps_std)
+                mod_sq_fake_std.append(diff_sq_fake_std)
+
+                plt.plot(epoch_list2,mod_sq_fake_std)
+                plt.yscale('log')
+                if platform == "linux":
+                    plt.savefig(r"/home/" + user + r"/Important/Images/convergence_test2_with_fakestd.png")
+                else:
+                    plt.savefig("images/convergence_test2_with_fakestd")
+                plt.close()
+
+                ##convergence test using real std
+                diff_sq_real_std = compare_ps(real_ave_ps,fake_ave_ps,real_ps_std)
+                mod_sq_real_std.append(diff_sq_real_std)
+
+                plt.plot(epoch_list2,mod_sq_real_std)
+                plt.yscale('log')
+                if platform == "linux":
+                    plt.savefig(r"/home/" + user + r"/Important/Images/convergence_test2_with_realstd.png")
+                else:
+                    plt.savefig("images/convergence_test2_with_realstd")
+                plt.close()
+
+                ##convergence test using real + fake std
+                comb_ps_std = []
+                for l in range(len(real_ps_std)):
+                    comb = np.sqrt(real_ps_std[l]**2 + fake_ps_std[l]**2)
+                    comb_ps_std.append(comb)
+                diff_sq_comb_std = compare_ps(real_ave_ps,fake_ave_ps,comb_ps_std)
+                mod_sq_comb_std.append(diff_sq_comb_std)
+
+                plt.plot(epoch_list2,mod_sq_comb_std)
+                plt.yscale('log')
+                if platform == "linux":
+                    plt.savefig(r"/home/" + user + r"/Important/Images/convergence_test2_with_combstd.png")
+                else:
+                    plt.savefig("images/convergence_test2_with_combstd")
+                plt.close()
+
+
+                #if epoch > look_for_cnvrg_at:
+                    #diff_sq_aft = compare_ps(real_ave_ps,fake_ave_ps,fake_ps_std)
                     #print(diff_sq_aft)
-                    diff = (diff_sq_bfr-diff_sq_aft)/diff_sq_aft
-                    mod_sq.append(diff_sq_aft)
-                    epoch_list2.append(epoch)
-                    diff_list.append(diff)
-                    epoch_list.append(epoch)
-                    diff_sq_bfr = diff_sq_aft
-                    plt.plot(epoch_list,diff_list)
-                    if platform == "linux":
-                        plt.savefig(r"/home/" + user + r"/Important/Images/convergence_test.png")
-                    else:
-                        plt.savefig("images/convergence_test")
-                    plt.close()
-                    plt.plot(epoch_list2,mod_sq)
-                    plt.yscale('log')
-                    if platform == "linux":
-                        plt.savefig(r"/home/" + user + r"/Important/Images/convergence_test2.png")
-                    else:
-                        plt.savefig("images/convergence_test2")
-                    plt.close()
+                    #diff = (diff_sq_bfr-diff_sq_aft)/diff_sq_aft
+                    #mod_sq.append(diff_sq_aft)
+                    #epoch_list2.append(epoch)
+                    #diff_list.append(diff)
+                    #epoch_list.append(epoch)
+                    #diff_sq_bfr = diff_sq_aft
+                    #plt.plot(epoch_list,diff_list)
+
+                    #if platform == "linux":
+                    #    plt.savefig(r"/home/" + user + r"/Important/Images/convergence_test.png")
+                    #else:
+                    #    plt.savefig("images/convergence_test")
+                    #plt.close()
 
 
-            #peak counts
+            #normal peak counts
             if epoch == 0:
                 idx = np.random.randint(0, X_train.shape[0], 500)#500
                 real_imgs = X_train[idx]
                 real_count_list = get_pk_hist(real_imgs)
-            if epoch % 100 == 0 and epoch != 0:
+            if epoch % 500 == 0 and epoch != 0:
                 noise = np.random.normal(0, 1, (500, self.latent_dim))#500
                 gen_imgs = self.generator.predict(noise)
                 fake_count_list = get_pk_hist(gen_imgs)
@@ -516,33 +636,84 @@ class DCGAN():
                 plt.close()
 
 
+            #peak count vs brightness
+            if epoch == 0:
+                idx = np.random.randint(0, X_train.shape[0], 10)
+                rl_imgs = X_train[idx]
+                rl_brightness_list = get_peak_vs_brightness(rl_imgs)
+
+                p_val_pk_bright_list = []
+                p_val_pk_bright_epoch = []
+            if epoch % 500 == 0 and epoch != 0:
+                noise = np.random.normal(0, 1, (10, self.latent_dim))
+                gn_imgs = self.generator.predict(noise)
+                fake_brightness_list = get_peak_vs_brightness(gn_imgs)
+                plt.hist(rl_brightness_list, bins=100, color="blue", label="real", alpha=0.7)
+                plt.hist(fake_brightness_list, bins=100, color="orange", label="fake", alpha=0.7)
+                plt.legend()
+                if platform == "linux":
+                    plt.savefig(r"/home/" + user + r"/Important/Images/pk_vs_brightness_%d.png" % epoch)
+                else:
+                    plt.savefig("images/pk_vs_brightness_%d.png" % epoch)
+                plt.close()
+
+                #kolmogorov
+                p_val_pk_bright = scipy.stats.ks_2samp(rl_brightness_list,fake_brightness_list)[1]
+                p_val_pk_bright_list.append(p_val_pk_bright)
+                p_val_pk_bright_epoch.append(epoch)
+                plt.plot(p_val_pk_bright_epoch,p_val_pk_bright_list)
+                if platform == "linux":
+                    plt.savefig(r"/home/" + user + r"/Important/Images/pk_vs_brightness_kolmogorov.png")
+                else:
+                    plt.savefig("images/pk_vs_brightness_kolmogorov.png")
+                plt.close()
+
+
             #pixel value histogram
-            find_pixel_val_at = 100
+            find_pixel_val_at = 500
             if epoch == 0:
                 idx = np.random.randint(0, X_train.shape[0], 1)
                 real_imgs = X_train[idx]
                 real_pix_val = get_pixel_val(real_imgs)
+
+                p_val_pix_val_list = []
+                p_val_pix_val_epoch = []
             if epoch % find_pixel_val_at == 0 and epoch != 0:
                 noise = np.random.normal(0, 1, (1, self.latent_dim))
                 gen_imgs = self.generator.predict(noise)
                 fake_pix_val = get_pixel_val(gen_imgs)
+
                 plt.hist(real_pix_val, bins=100, color="blue", label="real", alpha=0.7)
                 plt.hist(fake_pix_val, bins=100, color="orange", label="fake", alpha=0.7)
                 plt.legend()
+
                 if platform == "linux":
                     plt.savefig(r"/home/" + user + r"/Important/Images/pixel_val_%d.png" % epoch)
                 else:
                     plt.savefig("images/pixel_val_%d.png" % epoch)
                 plt.close()
 
+                #kolmogorov
+                p_val_pix_val = scipy.stats.ks_2samp(real_pix_val,fake_pix_val)[1]
+                p_val_pix_val_list.append(p_val_pk_bright)
+                p_val_pix_val_epoch.append(epoch)
+                plt.plot(p_val_pix_val_epoch,p_val_pix_val_list)
+                if platform == "linux":
+                    plt.savefig(r"/home/" + user + r"/Important/Images/pixel_val_kolmogorov.png")
+                else:
+                    plt.savefig("images/pixel_val_kolmogorov.png")
+                plt.close()
+
+
             #cross ps
-            if epoch % 100 == 0:
+            if epoch % 10 == 0:
                 idx = np.random.randint(0, X_train.shape[0], 1)
                 real_im = X_train[idx][0]
                 noise = np.random.normal(0, 1, (1, self.latent_dim))
                 fake_im = self.generator.predict(noise)[0]
 
-                CPS,k_lst = crossraPsd2d(real_im,fake_im)
+                #CPS,k_lst = crossraPsd2d(real_im,fake_im)
+                CPS,k_lst = crossraPsd2d(real_im,real_im)
                 plt.plot(k_lst,CPS)
                 if platform == "linux":
                     plt.savefig(r"/home/" + user + r"/Important/Images/cross_ps_%d.png" % epoch)
@@ -613,7 +784,7 @@ class DCGAN():
 if __name__ == '__main__':
 
     dcgan = DCGAN()
-    dcgan.train(epochs=4000, batch_size=16, save_interval=50)
+    dcgan.train(epochs=40000, batch_size=16, save_interval=500)
     dcgan.save_models()
 
 
