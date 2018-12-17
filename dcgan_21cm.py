@@ -18,19 +18,10 @@ from scipy.misc import imresize
 import pickle
 import tensorflow as tf
 
-<<<<<<< HEAD
-'''
 if platform == "linux":
     %run utils.ipynb
     user = get_user()
-'''
-=======
-"""
-if platform == "linux":
-    %run utils.ipynb
-    user = get_user()
-"""
->>>>>>> 43abf2f9067e47b58665b42b2b7abb86ecfdcd14
+
 
 def crossraPsd2d(img1,img2,show=False):
     s1 = len(img1)
@@ -68,8 +59,6 @@ def crossraPsd2d(img1,img2,show=False):
 
     imgf = np.fft.fft2(conv)
     imgfs = np.fft.fftshift(imgf)
-    imgf = conv
-    imgfs = conv
     S = np.zeros(128)
     Sconv = np.zeros(128)
     C = np.zeros(128)
@@ -85,7 +74,7 @@ def crossraPsd2d(img1,img2,show=False):
 
             if r <= 127:
                 S[r] += imgfs[i][j]
-                Sconv += conv[i][j]
+                Sconv[r] += conv[i][j]
                 C[r] += 1
 
     for i in range(128):
@@ -94,12 +83,9 @@ def crossraPsd2d(img1,img2,show=False):
             S[i] = 0
             Sconv[i] = 0
         else:
-            print(k**2 * S[i] / C[i])
-            S[i] = np.real(k**0 * S[i] / C[i])
-<<<<<<< HEAD
-=======
+            #print(k**2 * S[i] / C[i])
+            S[i] = np.real(k**2 * S[i] / C[i])
             Sconv[i] = np.real(k**0 * Sconv[i] / C[i])
->>>>>>> 43abf2f9067e47b58665b42b2b7abb86ecfdcd14
 
         k_list.append(k)
 
@@ -111,8 +97,6 @@ def crossraPsd2d(img1,img2,show=False):
         plt.imshow(conv)
         plt.show()
         plt.imshow(convc)
-        plt.show()
-        plt.imshow(np.log(abs(imgfs)))
         plt.show()
 
     #S,k_list = raPsd2d(conv,s1,show=show)
@@ -323,7 +307,7 @@ class DCGAN():
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
         self.latent_dim = 100
 
-        optimizer = Adam(0.00005, 0.5)
+        optimizer = Adam(0.00001, 0.5)
 
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
@@ -550,8 +534,8 @@ class DCGAN():
                 plt.close()
 
             """
-            """
-            look_for_cnvrg_at = 500
+
+            look_for_cnvrg_at = 2500
             if epoch == 0:
                 idx = np.random.randint(0, X_train.shape[0], 100)#100
                 real_imgs = X_train[idx]
@@ -643,7 +627,7 @@ class DCGAN():
                 idx = np.random.randint(0, X_train.shape[0], 500)#500
                 real_imgs = X_train[idx]
                 real_count_list = get_pk_hist(real_imgs)
-            if epoch % 500 == 0 and epoch != 0:
+            if epoch % 2500 == 0 and epoch != 0:
                 noise = np.random.normal(0, 1, (500, self.latent_dim))#500
                 gen_imgs = self.generator.predict(noise)
                 fake_count_list = get_pk_hist(gen_imgs)
@@ -665,7 +649,7 @@ class DCGAN():
 
                 p_val_pk_bright_list = []
                 p_val_pk_bright_epoch = []
-            if epoch % 500 == 0 and epoch != 0:
+            if epoch % 2500 == 0 and epoch != 0:
                 noise = np.random.normal(0, 1, (10, self.latent_dim))
                 gn_imgs = self.generator.predict(noise)
                 fake_brightness_list = get_peak_vs_brightness(gn_imgs)
@@ -691,7 +675,7 @@ class DCGAN():
 
 
             #pixel value histogram
-            find_pixel_val_at = 500
+            find_pixel_val_at = 2500
             if epoch == 0:
                 idx = np.random.randint(0, X_train.shape[0], 1)
                 real_imgs = X_train[idx]
@@ -725,9 +709,9 @@ class DCGAN():
                     plt.savefig("images/pixel_val_kolmogorov.png")
                 plt.close()
 
-            """
+
             #cross ps
-            if epoch % 10 == 0:
+            if epoch % 2500 == 0:
                 idx = np.random.randint(0, X_train.shape[0], 1)
                 real_im = X_train[idx][0]
                 noise = np.random.normal(0, 1, (1, self.latent_dim))
@@ -736,7 +720,7 @@ class DCGAN():
                 #cross ps with FT
                 CPS,CPSconv,k_lst = crossraPsd2d(real_im,fake_im)
                 #CPS,CPSconv,k_lst = crossraPsd2d(real_im,real_im)
-                plt.plot(k_lst,CPS)
+                plt.plot(k_lst[1:],CPS[1:])
                 if platform == "linux":
                     plt.savefig(r"/home/" + user + r"/Important/Images/cross_ps_FT_%d.png" % epoch)
                 else:
@@ -746,7 +730,7 @@ class DCGAN():
                 #cross ps with conv
                 CPS,CPSconv,k_lst = crossraPsd2d(real_im,fake_im)
                 #CPS,CPSconv,k_lst = crossraPsd2d(real_im,real_im)
-                plt.plot(k_lst,CPSconv)
+                plt.plot(k_lst[1:],CPSconv[1:])
                 if platform == "linux":
                     plt.savefig(r"/home/" + user + r"/Important/Images/cross_ps_conv_%d.png" % epoch)
                 else:
@@ -816,7 +800,7 @@ class DCGAN():
 if __name__ == '__main__':
 
     dcgan = DCGAN()
-    dcgan.train(epochs=40000, batch_size=16, save_interval=500)
+    dcgan.train(epochs=400000, batch_size=16, save_interval=500)
     dcgan.save_models()
 
 
