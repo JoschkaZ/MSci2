@@ -535,7 +535,7 @@ class DCGAN():
 
             """
 
-            look_for_cnvrg_at = 2500
+            look_for_cnvrg_at = 5000
             if epoch == 0:
                 idx = np.random.randint(0, X_train.shape[0], 100)#100
                 real_imgs = X_train[idx]
@@ -627,7 +627,7 @@ class DCGAN():
                 idx = np.random.randint(0, X_train.shape[0], 500)#500
                 real_imgs = X_train[idx]
                 real_count_list = get_pk_hist(real_imgs)
-            if epoch % 2500 == 0 and epoch != 0:
+            if epoch % 5000 == 0 and epoch != 0:
                 noise = np.random.normal(0, 1, (500, self.latent_dim))#500
                 gen_imgs = self.generator.predict(noise)
                 fake_count_list = get_pk_hist(gen_imgs)
@@ -649,7 +649,7 @@ class DCGAN():
 
                 p_val_pk_bright_list = []
                 p_val_pk_bright_epoch = []
-            if epoch % 2500 == 0 and epoch != 0:
+            if epoch % 5000 == 0 and epoch != 0:
                 noise = np.random.normal(0, 1, (10, self.latent_dim))
                 gn_imgs = self.generator.predict(noise)
                 fake_brightness_list = get_peak_vs_brightness(gn_imgs)
@@ -675,7 +675,7 @@ class DCGAN():
 
 
             #pixel value histogram
-            find_pixel_val_at = 2500
+            find_pixel_val_at = 5000
             if epoch == 0:
                 idx = np.random.randint(0, X_train.shape[0], 1)
                 real_imgs = X_train[idx]
@@ -711,7 +711,7 @@ class DCGAN():
 
 
             #cross ps
-            if epoch % 2500 == 0:
+            if epoch % 5000 == 0:
                 idx = np.random.randint(0, X_train.shape[0], 1)
                 real_im = X_train[idx][0]
                 noise = np.random.normal(0, 1, (1, self.latent_dim))
@@ -800,7 +800,7 @@ class DCGAN():
 if __name__ == '__main__':
 
     dcgan = DCGAN()
-    dcgan.train(epochs=400000, batch_size=16, save_interval=500)
+    dcgan.train(epochs=400000, batch_size=16, save_interval=5000)
     dcgan.save_models()
 
 
