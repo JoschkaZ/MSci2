@@ -17,25 +17,16 @@ from scipy import stats
 from scipy.misc import imresize
 import pickle
 import tensorflow as tf
-<<<<<<< HEAD
-'''
-<<<<<<< HEAD
-=======
->>>>>>> fa56a70644306a5de8d3a49294a4b03f11524022
 
 if platform == "linux":
     %run utils.ipynb
     user = get_user()
-<<<<<<< HEAD
-'''
+
 
 """
 if platform == "linux":
     %run utils.ipynb
     user = get_user()
-=======
-
->>>>>>> fa56a70644306a5de8d3a49294a4b03f11524022
 
 >>>>>>> 43abf2f9067e47b58665b42b2b7abb86ecfdcd14
 """
@@ -75,11 +66,8 @@ def crossraPsd2d(img1,img2,show=False):
 
     imgf = np.fft.fft2(conv)
     imgfs = np.fft.fftshift(imgf)
-<<<<<<< HEAD
     #imgf = conv
     #imgfs = conv
-=======
->>>>>>> fa56a70644306a5de8d3a49294a4b03f11524022
     S = np.zeros(128)
     Sconv = np.zeros(128)
     C = np.zeros(128)
@@ -104,16 +92,10 @@ def crossraPsd2d(img1,img2,show=False):
             S[i] = 0
             Sconv[i] = 0
         else:
-<<<<<<< HEAD
             print(k**2 * S[i] / C[i])
             S[i] = np.real(k**2 * S[i] / C[i])
             Sconv[i] = np.real(k**0 * Sconv[i] / C[i])
             k_list.append(k)
-=======
-            #print(k**2 * S[i] / C[i])
-            S[i] = np.real(k**2 * S[i] / C[i])
-            Sconv[i] = np.real(k**0 * Sconv[i] / C[i])
->>>>>>> fa56a70644306a5de8d3a49294a4b03f11524022
 
 
     if show == True:

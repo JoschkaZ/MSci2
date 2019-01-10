@@ -4,13 +4,14 @@ import numpy as np
 import utils
 import datetime
 importlib.reload(utils)
+import time
 
 
 #zip_name = 'single_redshift'
 
 seeds = range(1)
-ZSTART = 12
-ZEND = 11
+ZSTART = 13
+ZEND = 9
 ZSTEP = -1
 ZETA_X = 'default'
 
@@ -18,6 +19,7 @@ for SEED in seeds:
     print('###################################################################')
     print('###################################################################')
     print('###################################################################')
+    start_time = time.time()
 
     print('using seed ', SEED)
 
@@ -35,26 +37,23 @@ for SEED in seeds:
     utils.change_parameter('drive_zscroll_noTs ZSTART', ZSTART) # 8
     utils.change_parameter('drive_zscroll_noTs ZEND', ZEND)
     utils.change_parameter('drive_zscroll_noTs ZSTEP', ZSTEP)
+
     #run driver
     #commands = ['make', './drive_logZscroll_Ts']
     commands = ['make', './drive_zscroll_noTs']
     utils.run_commands(commands)
 
     #rename and zip all delta_T_boxes
+    # box name is: parameter_string + '_' + old_boxname
     utils.cd_to_boxes()
     box_names = utils.get_delta_T_boxes()
     param_string = 'SEED'+str(SEED)+'_ZSTART'+str(ZSTART)+'_ZEND'+str(ZEND)+'_ZSTEP'+str(ZSTEP)+'_ZETA_X'+str(ZETA_X)
     box_names = utils.rename_boxes(box_names, param_string)
 
-    #archive_name = zip_name + '_' + str(SEED) #DEFINE ARCHIVE NAME
+    #name archive
+    # archive name is: data + '_' + parameter_string
     archive_name = str(datetime.datetime.now()).replace(' ','_')+'_'+param_string
-    #print('ARCHIVE_NAME', archive_name)
     utils.zip_boxes(box_names, archive_name)
 
-
-    '''
-    next steps after driver has finished:
-    1. process boxes
-    2. downlaod boxes
-    3. repeat for different settings
-    '''
+    print('ITERATION FINISHED')
+    print('T = ', time.time() - start_time, 's')

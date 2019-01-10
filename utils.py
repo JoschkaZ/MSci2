@@ -7,13 +7,6 @@ from os import listdir
 from os.path import isfile, join
 import pickle as pkl
 #from power_spectrum_test import raPsd2d
-print(5)
-
-
-
-#%%
-
-
 
 
 def get_path():
@@ -24,9 +17,6 @@ def get_path():
         return r'/home/' + user + r'/21cmFAST-master'
     else:
         return r'C:\21cmFAST\21cmFAST-master'
-
-
-
 
 def get_user():
     linpath = os.getcwd()
@@ -156,9 +146,6 @@ def get_parameter_paths(parameter_name, new_value):
 
 def change_parameter(parameter_name, new_value, verbose=1):
 
-    #ZETA_X (double) (2.0e56) // 2e56 ~ 0.3 X-ray photons per stellar baryon
-
-    # get path to file
     PATH = get_path()
 
     f1,f2,new_value,parameter_name = get_parameter_paths(parameter_name, new_value)
@@ -172,38 +159,27 @@ def change_parameter(parameter_name, new_value, verbose=1):
     else: # its a windows !!!!
         filepath = PATH + '\\' + f1 + '\\' + f2
 
-
     if verbose == 1: print('Changing paramter ', parameter_name, ' to ', new_value)
 
     # read old text
     with open(filepath, "r") as f:
-         old = f.readlines() # read everything in the file
+         old = f.readlines()
 
     # create new text
     new = []
     found_it = False
     for line in old:
-        #print(line)
         if '#define ' + parameter_name + ' (' in line:
             found_it = True
-            #print('CHANGING LINE')
-            #print(line)
             if len(line.split('(')) == 3: #its #define name (type) (value)
                 newline = '('.join(line.split('(')[0:2]) + '(' + str(new_value) + ')' + ')'.join(line.split(')')[2::])
             else: #its #define name (value)
                 newline = line.split('(')[0] + '(' + str(new_value) + ')' + ')'.join(line.split(')')[1::])
-            #print(newline)
         else:
             newline=line
         new.append(newline)
     if found_it == False: print('WARNING - COULD NOT FIND ROW WITH PARAMETER TO BE CHANGED!')
 
-    #print('#####PRINTING NEW FILE#####')
-    #for line in new:
-    #    print(line)
-    #    1
-
-    # save new text
     '''
     print(filepath[0:-3]+'_mod.H')
     with open(filepath[-3:-1]+'_mod.H', 'w') as f:
@@ -218,13 +194,7 @@ def change_parameter(parameter_name, new_value, verbose=1):
     text_file.write(new)
     text_file.close()
 
-
-
-
     if verbose == 1: print('Parameter file has been modified')
-
-    # r'C:\21cmFAST\21cmFAST-master'
-    #:\21cmFAST\21cmFAST-master\Parameter_files
 
     return 1
 
@@ -237,9 +207,11 @@ def run_commands(commands, verbose=1):
 def cd_to_boxes():
     user = get_user()
     os.chdir(r'/home/' + user + r'/21cmFAST-master/Boxes')
+
 def cd_to_programs():
     user = get_user()
     os.chdir(r'/home/' + user + r'/21cmFAST-master/Programs')
+
 def cd_to_python():
     user = get_user()
     os.chdir(r'/home/' + user + r'/MSci-Project-21cm')
@@ -280,7 +252,6 @@ def rename_boxes(box_names, param_string, verbose=1):
     run_commands(commands)
 
     return new_box_names
-
 
 def zip_boxes(box_names, archive_name, verbose=1):
     user = get_user()
@@ -329,8 +300,6 @@ def boxes_to_list_of_slices(box_names, limit=None, mypath=''):
             slices.append(slice)
 
     pkl.dump(slices, open("slices.pkl", "wb"))
-
-
 
 if __name__ == '__main__':
     print(1)
