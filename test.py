@@ -71,10 +71,10 @@ img1 = [[1,1,1], [1,1,1], [1,1,1]]
 img2 = [[1,1,1], [1,1,1], [1,1,1]]
 
 img1 = box[0]
-img2 = box[3]
+img2 = box[128]
 
-img1 = np.array(img1) - np.mean(img1)
-img2 = np.array(img2) - np.mean(img2)
+#img1 = np.array(img1) - np.mean(img1)
+#img2 = np.array(img2) - np.mean(img2)
 
 '''
 img1 = np.zeros((256,256))
@@ -102,5 +102,8 @@ S = dcgan_21cm.crossraPsd2d(img1,img2,show=True)
 #test = dcgan_21cm.raPsd2d(img1, 256,show=True)
 #%%
 print(S)
-plt.plot((S[0][1:]))
+plt.plot(S[0][0:])
+
+plt.show()
+plt.plot(S[1][0:])
 plt.show()

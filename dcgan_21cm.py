@@ -17,21 +17,21 @@ from scipy import stats
 from scipy.misc import imresize
 import pickle
 import tensorflow as tf
-
+'''
 <<<<<<< HEAD
-'''
-if platform == "linux":
-    %run utils.ipynb
-    user = get_user()
-'''
-=======
-"""
-if platform == "linux":
-    %run utils.ipynb
-    user = get_user()
-"""
->>>>>>> 43abf2f9067e47b58665b42b2b7abb86ecfdcd14
 
+if platform == "linux":
+    %run utils.ipynb
+    user = get_user()
+'''
+
+"""
+if platform == "linux":
+    %run utils.ipynb
+    user = get_user()
+
+>>>>>>> 43abf2f9067e47b58665b42b2b7abb86ecfdcd14
+"""
 def crossraPsd2d(img1,img2,show=False):
     s1 = len(img1)
     s2 = len(img2)
@@ -68,8 +68,8 @@ def crossraPsd2d(img1,img2,show=False):
 
     imgf = np.fft.fft2(conv)
     imgfs = np.fft.fftshift(imgf)
-    imgf = conv
-    imgfs = conv
+    #imgf = conv
+    #imgfs = conv
     S = np.zeros(128)
     Sconv = np.zeros(128)
     C = np.zeros(128)
@@ -85,7 +85,7 @@ def crossraPsd2d(img1,img2,show=False):
 
             if r <= 127:
                 S[r] += imgfs[i][j]
-                Sconv += conv[i][j]
+                Sconv[r] += conv[i][j]
                 C[r] += 1
 
     for i in range(128):
@@ -95,13 +95,10 @@ def crossraPsd2d(img1,img2,show=False):
             Sconv[i] = 0
         else:
             print(k**2 * S[i] / C[i])
-            S[i] = np.real(k**0 * S[i] / C[i])
-<<<<<<< HEAD
-=======
+            S[i] = np.real(k**2 * S[i] / C[i])
             Sconv[i] = np.real(k**0 * Sconv[i] / C[i])
->>>>>>> 43abf2f9067e47b58665b42b2b7abb86ecfdcd14
+            k_list.append(k)
 
-        k_list.append(k)
 
     if show == True:
         plt.imshow(img1)
