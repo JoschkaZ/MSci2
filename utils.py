@@ -256,7 +256,6 @@ def rename_boxes(box_names, param_string, verbose=1):
 def zip_boxes(box_names, archive_name, verbose=1):
     user = get_user()
 
-    #get box names
     box_names = '\n'.join(box_names)
 
     #write box names to out.txt
@@ -266,8 +265,6 @@ def zip_boxes(box_names, archive_name, verbose=1):
 
     if verbose==1: print('zipping boxes')
 
-
-    print('archive name ', archive_name)
     # zip boxes
     commands = [
     'zip '+ archive_name +'.zip -@ < out.txt', #zip all files listed in out.txt
