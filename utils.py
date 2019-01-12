@@ -299,6 +299,21 @@ def boxes_to_list_of_slices(box_names, limit=None, mypath=''):
 
     pkl.dump(slices, open("slices.pkl", "wb"))
 
+def get_seed_boxes(verbose=1, mypath=''):
+    if verbose == 1: print('getting delta_t box names')
+
+    if mypath == '':
+        user = get_user()
+        mypath = r'/home/' + user + r'/21cmFAST-master/Boxes'
+    boxfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+
+    temp = []
+    for boxfile in boxfiles:
+        if boxfile[0:4] == 'SEED':
+            temp.append(boxfile)
+
+    return temp
+
 def slice_boxes(box_names, mypath, interval=5):
 
 
