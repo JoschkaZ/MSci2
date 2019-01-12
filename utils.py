@@ -319,7 +319,6 @@ def slice_boxes(box_names, mypath, interval=5):
 
     slices = []
 
-    if limit== None: limit = len(box_names)
     for boxname in box_names[0:limit]:
 
         box = read_box(boxname, mypath=mypath)
