@@ -326,7 +326,7 @@ def slice_boxes(box_names, mypath, interval=5):
 
         for i in range(0,255,interval):
             slice = box[i,:,:]
-            slices.append((slice,boxname)))
+            slices.append((slice,boxname))
         for i in range(0,255,interval):
             slice = box[:,i,:]
             slices.append((slice,boxname))
