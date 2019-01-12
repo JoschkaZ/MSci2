@@ -52,7 +52,7 @@ for SEED in seeds:
 
     #name archive
     # archive name is: data + '_' + parameter_string
-    archive_name = str(datetime.datetime.now()).replace(' ','_')+'_'+param_string
+    archive_name = str(datetime.datetime.now()).replace(' ','_').replace(':','#').replace('.','#')+'_'+param_string
     utils.zip_boxes(box_names, archive_name)
 
     print('ITERATION FINISHED')

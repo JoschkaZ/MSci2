@@ -299,5 +299,27 @@ def boxes_to_list_of_slices(box_names, limit=None, mypath=''):
 
     pkl.dump(slices, open("slices.pkl", "wb"))
 
+def slice_boxes(box_names, mypath, interval=5):
+
+
+    slices = []
+
+    if limit== None: limit = len(box_names)
+    for boxname in box_names[0:limit]:
+
+        box = read_box(boxname, mypath=mypath)
+
+        for i in range(0,255,interval):
+            slice = box[i,:,:]
+            slices.append((slice,boxname)))
+        for i in range(0,255,interval):
+            slice = box[:,i,:]
+            slices.append((slice,boxname))
+        for i in range(0,255,interval):
+            slice = box[:,:,i]
+            slices.append((slice,boxname))
+
+    pkl.dump(slices, open("slices2.pkl", "wb"))
+
 if __name__ == '__main__':
     print(1)
