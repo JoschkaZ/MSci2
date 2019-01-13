@@ -314,7 +314,7 @@ def get_seed_boxes(verbose=1, mypath=''):
 
     return temp
 
-def slice_boxes(box_names, mypath, interval=5):
+def slice_boxes(box_names, mypath, interval=5, image_size=255):
 
 
     slices = []
@@ -324,16 +324,16 @@ def slice_boxes(box_names, mypath, interval=5):
         box = read_box(boxname, mypath=mypath)
 
         for i in range(0,255,interval):
-            slice = box[i,:,:]
+            slice = box[i,0:image_size,0:image_size]
             slices.append((slice,boxname))
         for i in range(0,255,interval):
-            slice = box[:,i,:]
+            slice = box[0:image_size,i,0:image_size]
             slices.append((slice,boxname))
         for i in range(0,255,interval):
-            slice = box[:,:,i]
+            slice = box[0:image_size,0:image_size,i]
             slices.append((slice,boxname))
 
-    pkl.dump(slices, open("slices2.pkl", "wb"))
+    pkl.dump(slices, open("slices2_" + str(image_size) +  ".pkl", "wb"))
 
 if __name__ == '__main__':
     print(1)
