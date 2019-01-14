@@ -253,4 +253,4 @@ class CGAN():
 
 if __name__ == '__main__':
     cgan = CGAN()
-cgan.train(epochs=3000, batch_size=32, sample_interval=200)
+cgan.train(epochs=201, batch_size=32, sample_interval=200)

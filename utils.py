@@ -314,7 +314,7 @@ def get_seed_boxes(verbose=1, mypath=''):
 
     return temp
 
-def slice_boxes(box_names, mypath, interval=5, image_size=255):
+def slice_boxes(box_names, mypath, interval=5, image_size=256):
 
 
     slices = []
@@ -323,13 +323,13 @@ def slice_boxes(box_names, mypath, interval=5, image_size=255):
 
         box = read_box(boxname, mypath=mypath)
 
-        for i in range(0,255,interval):
+        for i in range(0,256,interval):
             slice = box[i,0:image_size,0:image_size]
             slices.append((slice,boxname))
-        for i in range(0,255,interval):
+        for i in range(0,256,interval):
             slice = box[0:image_size,i,0:image_size]
             slices.append((slice,boxname))
-        for i in range(0,255,interval):
+        for i in range(0,256,interval):
             slice = box[0:image_size,0:image_size,i]
             slices.append((slice,boxname))
 

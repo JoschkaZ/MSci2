@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import sys
 import numpy as np
 from keras.preprocessing import image
+from keras.activations import tanh
+
 
 
 
