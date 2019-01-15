@@ -18,18 +18,14 @@ from scipy.misc import imresize
 import pickle
 import tensorflow as tf
 
-if platform == "linux":
+try:
     %run utils.ipynb
     user = get_user()
+except:
+    import utils
+    user = utils.get_user()
 
 
-"""
-if platform == "linux":
-    %run utils.ipynb
-    user = get_user()
-
->>>>>>> 43abf2f9067e47b58665b42b2b7abb86ecfdcd14
-"""
 def crossraPsd2d(img1,img2,show=False):
     s1 = len(img1)
     s2 = len(img2)
@@ -66,8 +62,6 @@ def crossraPsd2d(img1,img2,show=False):
 
     imgf = np.fft.fft2(conv)
     imgfs = np.fft.fftshift(imgf)
-    #imgf = conv
-    #imgfs = conv
     S = np.zeros(128)
     Sconv = np.zeros(128)
     C = np.zeros(128)
@@ -92,11 +86,11 @@ def crossraPsd2d(img1,img2,show=False):
             S[i] = 0
             Sconv[i] = 0
         else:
-            print(k**2 * S[i] / C[i])
+            #print(k**2 * S[i] / C[i])
             S[i] = np.real(k**2 * S[i] / C[i])
             Sconv[i] = np.real(k**0 * Sconv[i] / C[i])
-            k_list.append(k)
 
+        k_list.append(k)
 
     if show == True:
         plt.imshow(img1)
@@ -466,7 +460,7 @@ class DCGAN():
         slices = np.array(slices)
         X_train = np.interp(slices, (slices.min(), slices.max()), (-1, +1))
 
-
+        X_train_no_dim = X_train ##############################################################
         X_train = np.expand_dims(X_train, axis=3)
 
         # Adversarial ground truths
@@ -544,10 +538,11 @@ class DCGAN():
 
             """
 
-            look_for_cnvrg_at = 5000
+            look_for_cnvrg_at = 5000 ######5000
             if epoch == 0:
-                idx = np.random.randint(0, X_train.shape[0], 100)#100
-                real_imgs = X_train[idx]
+                idx = np.random.randint(0, X_train_no_dim.shape[0], 100)#100
+                real_imgs = X_train_no_dim[idx]
+                #print(real_imgs)
                 real_ave_ps,real_ps_std,k_list_real = produce_average_ps(real_imgs)
 
                 mod_sq_fake_std = []
@@ -559,10 +554,12 @@ class DCGAN():
             if epoch % look_for_cnvrg_at == 0 and epoch != 0:
                 noise = np.random.normal(0, 1, (100, self.latent_dim))#100
                 gen_imgs = self.generator.predict(noise)
+                gen_imgs = np.squeeze(gen_imgs)
+                #print(gen_imgs)
                 fake_ave_ps,fake_ps_std,k_list_fake = produce_average_ps(gen_imgs)
-                plt.plot(k_list_real,real_ave_ps, color="blue", label="real")
+                plt.plot(k_list_real[1:],real_ave_ps[1:], color="blue", label="real")
                 plt.yscale('log')
-                plt.errorbar(x=k_list_fake, y=fake_ave_ps, yerr=fake_ps_std, color="orange", alpha=0.5, label="fake")
+                plt.errorbar(x=k_list_fake[1:], y=fake_ave_ps[1:], yerr=fake_ps_std[1:], color="orange", alpha=0.5, label="fake")
                 plt.yscale('log')
                 plt.legend()
                 if platform == "linux":
@@ -721,10 +718,11 @@ class DCGAN():
 
             #cross ps
             if epoch % 5000 == 0:
-                idx = np.random.randint(0, X_train.shape[0], 1)
-                real_im = X_train[idx][0]
+                idx = np.random.randint(0, X_train_no_dim.shape[0], 1)
+                real_im = X_train_no_dim[idx][0]
                 noise = np.random.normal(0, 1, (1, self.latent_dim))
                 fake_im = self.generator.predict(noise)[0]
+                fake_im = np.squeeze(fake_im)
 
                 #cross ps with FT
                 CPS,CPSconv,k_lst = crossraPsd2d(real_im,fake_im)
@@ -809,7 +807,7 @@ class DCGAN():
 if __name__ == '__main__':
 
     dcgan = DCGAN()
-    dcgan.train(epochs=400000, batch_size=16, save_interval=5000)
+    dcgan.train(epochs=400000, batch_size=16, save_interval=500)
     dcgan.save_models()
 
 
