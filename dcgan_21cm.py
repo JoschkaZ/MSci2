@@ -410,19 +410,19 @@ class DCGAN():
         model.add(Dropout(0.25))
         #32
 
-        model.add(Conv2D(128, kernel_size=4, strides=1, padding="same"))
+        model.add(Conv2D(128, kernel_size=4, strides=2, padding="same"))
         model.add(BatchNormalization(momentum=0.8))
         model.add(LeakyReLU(alpha=0.2))
         model.add(Dropout(0.25))
         #16
 
-        model.add(Conv2D(128, kernel_size=3, strides=1, padding="same"))
+        model.add(Conv2D(128, kernel_size=3, strides=2, padding="same"))
         model.add(BatchNormalization(momentum=0.8))
         model.add(LeakyReLU(alpha=0.2))
         model.add(Dropout(0.25))
         #8
 
-        model.add(Conv2D(128, kernel_size=3, strides=1, padding="same"))
+        model.add(Conv2D(128, kernel_size=3, strides=2, padding="same"))
         model.add(BatchNormalization(momentum=0.8))
         model.add(LeakyReLU(alpha=0.2))
         model.add(Dropout(0.25))
