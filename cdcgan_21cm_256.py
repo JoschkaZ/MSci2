@@ -12,6 +12,8 @@ import numpy as np
 import time
 from keras.models import load_model
 import pickle as pkl
+from sys import platform
+import utils
 
 
 class CGAN():
@@ -324,7 +326,12 @@ class CGAN():
                     #axs[i,j].set_title("Digit: %d" % '_'.join(sample_at[cnt]))
                     axs[i,j].axis('off')
                     cnt += 1
-        fig.savefig("images/%d.png" % epoch)
+        if platform == 'linux':
+            user = utils.get_user()
+            print(user)
+            fig.savefig(r"/home/" + user + r"/MSci2/images/%d.png" % epoch)
+        else: #windows
+            fig.savefig("images/%d.png" % epoch)
         plt.close()
 
 
