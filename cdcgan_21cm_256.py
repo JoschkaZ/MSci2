@@ -1,6 +1,6 @@
 
 from __future__ import print_function, division
-from keras.datasets import mnist
+#from keras.datasets import mnist
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, Add
 from keras.layers import BatchNormalization, Activation, Embedding, ZeroPadding2D, Conv2DTranspose
 from keras.layers.advanced_activations import LeakyReLU
