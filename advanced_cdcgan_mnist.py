@@ -47,9 +47,9 @@ class CGAN():
 
         #con2 = Dense(5, activation='tanh')(con)
         #con2 = Dense(22, activation='tanh')(con2)
-        con1 = Dense(2, activation='tanh')(con) #TODO this is likely bad because it squases the ends too much
-        con1 = Dense(4, activation='tanh')(con1)
-        con1 = Dense(8, activation='tanh')(con1)
+        con1 = Dense(2)(con) #TODO this is likely bad because it squases the ends too much
+        con1 = Dense(4)(con1)
+        con1 = Dense(8)(con1)
         con1 = Dense(16, activation='tanh')(con1)
         con1 = Dense(32, activation='tanh')(con1)
         con1 = Dense(64, activation='tanh')(con1)
@@ -150,9 +150,9 @@ class CGAN():
         hid = Dense(100, activation='tanh')(hid)
         #64
 
-        con1 = Dense(2, activation='tanh')(con) #TODO same issue here....
-        con1 = Dense(4, activation='tanh')(con1)
-        con1 = Dense(8, activation='tanh')(con1)
+        con1 = Dense(2)(con) #TODO same issue here....
+        con1 = Dense(4)(con1)
+        con1 = Dense(8)(con1)
         con1 = Dense(16, activation='tanh')(con1)
         con1 = Dense(32, activation='tanh')(con1)
         con1 = Dense(64, activation='tanh')(con1)
@@ -181,6 +181,9 @@ class CGAN():
         # Load the dataset
         (X_train, y_train), (_, _) = mnist.load_data()
 
+        print(X_train.shape)
+        print(y_train.shape)
+
         # Configure input
         X_train = (X_train.astype(np.float32) - 127.5) / 127.5
         X_train = np.expand_dims(X_train, axis=3)
@@ -188,6 +191,10 @@ class CGAN():
         y_train = (y_train.astype(np.float32)-4.5) / 4.5
         print(y_train)
         print(len(y_train))
+
+        print('FINAL SHAPES')
+        print(X_train.shape)
+        print(y_train.shape)
 
         # Adversarial ground truths
         valid = np.ones((batch_size, 1))
@@ -280,4 +287,4 @@ class CGAN():
 
 if __name__ == '__main__':
     cgan = CGAN()
-cgan.train(epochs=20000, batch_size=256, sample_interval=10, save_multiple = 10)
+    cgan.train(epochs=20000, batch_size=256, sample_interval=10, save_multiple = 10)
