@@ -26,7 +26,7 @@ class CGAN():
 
         optimizer = Adam(0.0002, 0.5)
 
-        ph_img = Input(shape=(32,32,1))
+        ph_img = Input(shape=(256,256,1))
         ph_label = Input(shape=(self.label_dim,))
 
         self.discriminator = self.build_discriminator(ph_img, ph_label)
@@ -48,7 +48,9 @@ class CGAN():
     def read_data(self):
 
         print('importing data...')
-        data = pkl.load( open( "C:\Outputs\slices2_32.pkl", "rb" ) )
+        #data = pkl.load( open( "C:\Outputs\slices2_32.pkl", "rb" ) )
+        data = pkl.load(open("/home/jz8415/slices2.pkl", "rb"))
+        print('data imported!')
 
         self.imgs = []
         self.labels = []
@@ -78,8 +80,7 @@ class CGAN():
 
     def build_generator(self, noise, con):
 
-        con1 = Dense(32, activation='tanh')(con)
-        con1 = Dense(64, activation='tanh')(con1)
+        con1 = Dense(100, activation='tanh')(con)
         con1 = Dense(100, activation='tanh')(con1)
 
         merged_input = Concatenate()([con1, noise])
@@ -280,9 +281,9 @@ class CGAN():
 
             if epoch % save_model_interval == 0:
                 print('saving models...')
-                self.discriminator.save('models/2132discriminator_' + str(self.start_time) + '.h5')
-                self.combined.save('models/2132combined_' + str(self.start_time) + '.h5')
-                self.generator.save('models/2132generator_' + str(self.start_time) + '.h5')
+                self.discriminator.save('models/21256discriminator_' + str(self.start_time) + '.h5')
+                self.combined.save('models/21256combined_' + str(self.start_time) + '.h5')
+                self.generator.save('models/21256generator_' + str(self.start_time) + '.h5')
 
     def sample_images(self, epoch):
 
