@@ -126,7 +126,7 @@ class CGAN():
         hid = Activation("tanh")(hid)
         # -> 1x288x288
 
-        out = Cropping2D(cropping=((16,16),(16,16)))
+        out = Cropping2D(cropping=((16,16),(16,16)))(hid)
         # -> 1x256x256
 
         model =  Model([noise, con], out)
