@@ -27,7 +27,7 @@ class CGAN():
 
         self.read_data()
 
-        optimizer = Adam(0.0002, 0.5)
+        optimizer = Adam(0.00005, 0.5)
 
         ph_img = Input(shape=(256,256,1))
         ph_label = Input(shape=(self.label_dim,))
@@ -81,6 +81,7 @@ class CGAN():
 
         self.real_imgs_index = {}
         for i, z in enumerate(self.labels):
+            z = z[0]
             if not z in self.real_imgs_index:
                 self.real_imgs_index[z] = []
             self.real_imgs_index[z].append(i)
@@ -294,23 +295,27 @@ class CGAN():
                 self.combined.save('models/21256combined_' + str(self.start_time) + '.h5')
                 self.generator.save('models/21256generator_' + str(self.start_time) + '.h5')
 
-            if epoch % 10:
-                calc_stats(epoch)
+            if epoch % 2000 == 0:
+                self.calc_stats(epoch)
 
     def calc_stats(self, epoch):
         if epoch == 0:
             self.real_imgs_dict = {}
-            for i in real_imgs_index:
-                intv = int(len(real_imgs_index[i])/99)
-                index_list = real_imgs_index[i][::intv]
+            for i in self.real_imgs_index:
+                intv = int(len(self.real_imgs_index[i])/99)
+                index_list = self.real_imgs_index[i][::intv]
                 real_imgs = self.imgs[index_list]
+                real_imgs = np.squeeze(real_imgs)
+                #print(real_imgs)
+                #print(np.shape(real_imgs))
                 real_ave_ps,real_ps_std,k_list_real = stats_utils.produce_average_ps(real_imgs)
-                real_imgs_dict[i] = [real_ave_ps[1:],k_list_real[1:]]
+                self.real_imgs_dict[i] = [real_ave_ps[1:],k_list_real[1:]]
 
-        if epoch % get_stats == 0:
+        else:
             noise = np.random.normal(0, 1, (100, 100))
             for z in self.real_imgs_index:
-                gen_imgs = self.generator.predict([noise, [[z]]*100])
+                gen_imgs = self.generator.predict([noise, np.reshape([[z]]*100,(100,1))])
+                gen_imgs = np.squeeze(gen_imgs)
                 fake_ave_ps,fake_ps_std,k_list_fake = stats_utils.produce_average_ps(gen_imgs)
                 plt.errorbar(x=k_list_fake[1:], y=fake_ave_ps[1:], yerr=fake_ps_std[1:], alpha=0.5, label="fake z="+str(z))
                 plt.yscale('log')
@@ -320,9 +325,9 @@ class CGAN():
             if platform == 'linux':
                 user = utils.get_user()
                 print(user)
-                fig.savefig(r"/home/" + user + r"/MSci2/images/ps_%d.png" % epoch)
+                plt.savefig(r"/home/" + user + r"/MSci2/images/ps_%d.png" % epoch)
             else: #windows
-                fig.savefig("images/ps_%d.png" % epoch)
+                plt.savefig("images/ps_%d.png" % epoch)
             plt.close()
 
 
@@ -379,4 +384,4 @@ class CGAN():
 
 if __name__ == '__main__':
     cgan = CGAN()
-    cgan.train(epochs=20000, batch_size=32, sample_interval=10, save_model_interval = 100)
+    cgan.train(epochs=400000, batch_size=32, sample_interval=2000, save_model_interval = 2000)
