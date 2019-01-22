@@ -66,7 +66,7 @@ class CGAN():
             self.start_epoch = start_epoch +1
 
             print('Reading discriminator from: ', mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
-            self.discriminator = keras.models.load_model(mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
+            self.discriminator = load_model(mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
 
         noise = Input(shape=(100,))
         label = Input(shape=(self.label_dim,))
@@ -75,7 +75,7 @@ class CGAN():
             self.generator = self.build_generator(noise, label, use_old_model)
         else:
             print('Reading generator from: ', mypath +'/21256generator_' + str(time_to_load) + '.h5')
-            self.generator = keras.models.load_model(mypath +'/21256generator_' + str(time_to_load) + '.h5')
+            self.generator = load_model(mypath +'/21256generator_' + str(time_to_load) + '.h5')
 
         img = self.generator([noise, label])
 
