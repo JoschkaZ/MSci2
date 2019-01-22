@@ -34,6 +34,7 @@ class CGAN():
         ph_img = Input(shape=(256,256,1))
         ph_label = Input(shape=(self.label_dim,))
 
+        self.find_ps = True
 
         if use_old_model == False:
             self.discriminator = self.build_discriminator(ph_img, ph_label)
@@ -41,7 +42,7 @@ class CGAN():
         else:
 
             # identify model to load
-            path = utils.get_path()
+            user = utils.get_user()
             mypath = r'/home/' + user + r'/MSci2/models'
             files = [f for f in listdir(mypath) if isfile(join(mypath, f))]
             print('Models found:')
@@ -57,11 +58,12 @@ class CGAN():
             files = [f for f in listdir(imgpath) if isfile(join(imgpath, f))]
             start_epoch = 0
             for file in files:
-                img_epoch = int(file.split('.')[0])
-                start_epoch = max(start_epoch, img_epoch)
+                if '_' not in file:
+                    img_epoch = int(file.split('.')[0])
+                    start_epoch = max(start_epoch, img_epoch)
 
             print('Epoch to start at: ', start_epoch)
-            self.start_epoch = start_epoch
+            self.start_epoch = start_epoch +1
 
             print('Reading discriminator from: ', mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
             self.discriminator = keras.models.load_model(mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
@@ -334,11 +336,11 @@ class CGAN():
                 self.combined.save('models/21256combined_' + str(self.start_time) + '.h5')
                 self.generator.save('models/21256generator_' + str(self.start_time) + '.h5')
 
-            if epoch % 2000 == 0:
+                #if epoch % 2000 == 0:
                 self.calc_stats(epoch)
 
     def calc_stats(self, epoch):
-        if epoch == 0:
+        if self.find_ps == True:
             self.real_imgs_dict = {}
             for i in self.real_imgs_index:
                 intv = int(len(self.real_imgs_index[i])/99)
@@ -349,6 +351,7 @@ class CGAN():
                 #print(np.shape(real_imgs))
                 real_ave_ps,real_ps_std,k_list_real = stats_utils.produce_average_ps(real_imgs)
                 self.real_imgs_dict[i] = [real_ave_ps[1:],k_list_real[1:]]
+            self.find_ps = False
 
         else:
             noise = np.random.normal(0, 1, (100, 100))
