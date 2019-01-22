@@ -14,11 +14,8 @@ from keras.models import load_model
 import pickle as pkl
 from sys import platform
 import utils
-<<<<<<< HEAD
 import sys
-=======
 import stats_utils #TODO need to make stats_utils file
->>>>>>> 8ade10ab354018dc29038f25b86fc2a85dc968bf
 
 
 class CGAN():
@@ -28,6 +25,7 @@ class CGAN():
         self.labels = []
         self.start_time = str(time.time()).split('.')[0]
         self.label_dim = -1
+        self.start_epoch = None
 
         self.read_data()
 
@@ -53,6 +51,17 @@ class CGAN():
                 model_time = int(file.split('_')[-1].split('.')[0])
                 time_to_load = max(time_to_load, model_time)
             print('Time to load: ', time_to_load)
+
+            # read epoch from images
+            imgpath = r'/home/' + user + r'/MSci2/images'
+            files = [f for f in listdir(imgpath) if isfile(join(imgpath, f))]
+            start_epoch = 0
+            for file in files:
+                img_epoch = int(file.split('.')[0])
+                start_epoch = max(start_epoch, img_epoch)
+
+            print('Epoch to start at: ', start_epoch)
+            self.start_epoch = start_epoch
 
             print('Reading discriminator from: ', mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
             self.discriminator = keras.models.load_model(mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
@@ -271,7 +280,12 @@ class CGAN():
         fake = np.zeros((batch_size, 1))
         last_acc = .75
 
-        for epoch in range(epochs): #these are not proper epochs, it just selects one batch randomly each time
+        # if the model was loaded, start at start_epoch
+        if start_epoch != None:
+            efrom = self.start_epoch
+        else:
+            efrom = 0
+        for epoch in range(0,epochs): #these are not proper epochs, it just selects one batch randomly each time
 
             # Select a random half batch of images
             idx = np.random.randint(0, self.imgs.shape[0], batch_size)
@@ -408,20 +422,17 @@ class CGAN():
 
 
 if __name__ == '__main__':
-<<<<<<< HEAD
 
     args = sys.argv
     if args[1] == 'new':
         cgan = CGAN(use_old_model=False)
-        cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
+        #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
+        cgan.train(epochs=400000, batch_size=32, sample_interval=2000, save_model_interval = 2000)
     elif args[1] == 'continue':
         cgan = CGAN(use_old_model=True)
-        cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
+        #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
+        cgan.train(epochs=400000, batch_size=32, sample_interval=2000, save_model_interval = 2000)
     else:
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
         print('write: "python cdcgan_21cm_256.py continue" to continue training the last model.')
-=======
-    cgan = CGAN()
-    cgan.train(epochs=400000, batch_size=32, sample_interval=2000, save_model_interval = 2000)
->>>>>>> 8ade10ab354018dc29038f25b86fc2a85dc968bf
