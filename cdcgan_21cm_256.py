@@ -281,11 +281,11 @@ class CGAN():
         last_acc = .75
 
         # if the model was loaded, start at start_epoch
-        if start_epoch != None:
+        if self.start_epoch != None:
             efrom = self.start_epoch
         else:
             efrom = 0
-        for epoch in range(0,epochs): #these are not proper epochs, it just selects one batch randomly each time
+        for epoch in range(efrom,epochs): #these are not proper epochs, it just selects one batch randomly each time
 
             # Select a random half batch of images
             idx = np.random.randint(0, self.imgs.shape[0], batch_size)
