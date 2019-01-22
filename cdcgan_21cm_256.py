@@ -14,7 +14,11 @@ from keras.models import load_model
 import pickle as pkl
 from sys import platform
 import utils
+<<<<<<< HEAD
 import sys
+=======
+import stats_utils #TODO need to make stats_utils file
+>>>>>>> 8ade10ab354018dc29038f25b86fc2a85dc968bf
 
 
 class CGAN():
@@ -27,7 +31,7 @@ class CGAN():
 
         self.read_data()
 
-        optimizer = Adam(0.0002, 0.5)
+        optimizer = Adam(0.00005, 0.5)
 
         ph_img = Input(shape=(256,256,1))
         ph_label = Input(shape=(self.label_dim,))
@@ -100,6 +104,13 @@ class CGAN():
         print(self.labels.shape)
         #(60000, 28, 28)
         #(60000,1) #after reshaping
+
+        self.real_imgs_index = {}
+        for i, z in enumerate(self.labels):
+            z = z[0]
+            if not z in self.real_imgs_index:
+                self.real_imgs_index[z] = []
+            self.real_imgs_index[z].append(i)
 
         return 'Done'
 
@@ -309,19 +320,57 @@ class CGAN():
                 self.combined.save('models/21256combined_' + str(self.start_time) + '.h5')
                 self.generator.save('models/21256generator_' + str(self.start_time) + '.h5')
 
+            if epoch % 2000 == 0:
+                self.calc_stats(epoch)
+
+    def calc_stats(self, epoch):
+        if epoch == 0:
+            self.real_imgs_dict = {}
+            for i in self.real_imgs_index:
+                intv = int(len(self.real_imgs_index[i])/99)
+                index_list = self.real_imgs_index[i][::intv]
+                real_imgs = self.imgs[index_list]
+                real_imgs = np.squeeze(real_imgs)
+                #print(real_imgs)
+                #print(np.shape(real_imgs))
+                real_ave_ps,real_ps_std,k_list_real = stats_utils.produce_average_ps(real_imgs)
+                self.real_imgs_dict[i] = [real_ave_ps[1:],k_list_real[1:]]
+
+        else:
+            noise = np.random.normal(0, 1, (100, 100))
+            for z in self.real_imgs_index:
+                gen_imgs = self.generator.predict([noise, np.reshape([[z]]*100,(100,1))])
+                gen_imgs = np.squeeze(gen_imgs)
+                fake_ave_ps,fake_ps_std,k_list_fake = stats_utils.produce_average_ps(gen_imgs)
+                plt.errorbar(x=k_list_fake[1:], y=fake_ave_ps[1:], yerr=fake_ps_std[1:], alpha=0.5, label="fake z="+str(z))
+                plt.yscale('log')
+                plt.plot(self.real_imgs_dict[z][1],self.real_imgs_dict[z][0], label="real z="+str(z))
+                plt.yscale('log')
+                plt.legend()
+            if platform == 'linux':
+                user = utils.get_user()
+                print(user)
+                plt.savefig(r"/home/" + user + r"/MSci2/images/ps_%d.png" % epoch)
+            else: #windows
+                plt.savefig("images/ps_%d.png" % epoch)
+            plt.close()
+
+
     def sample_images(self, epoch):
 
         sample_at = [
-        [6.],
         [7.],
+        [7.5],
         [8.],
+        [8.5],
         [9.],
+        [9.5],
         [10.],
-        [11.],
-        [12.]
+        [10.5],
+        [11.]
         ]
-        r = 4
-        c = 2
+        r = 3
+        c = 3
 
         sample_at = np.array(sample_at)
         sample_at = self.scale_labels(sample_at)
@@ -359,6 +408,7 @@ class CGAN():
 
 
 if __name__ == '__main__':
+<<<<<<< HEAD
 
     args = sys.argv
     if args[1] == 'new':
@@ -371,3 +421,7 @@ if __name__ == '__main__':
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
         print('write: "python cdcgan_21cm_256.py continue" to continue training the last model.')
+=======
+    cgan = CGAN()
+    cgan.train(epochs=400000, batch_size=32, sample_interval=2000, save_model_interval = 2000)
+>>>>>>> 8ade10ab354018dc29038f25b86fc2a85dc968bf
