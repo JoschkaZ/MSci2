@@ -468,6 +468,8 @@ class CGAN():
         r = len(sample_at0)
         c = 2
 
+        temp_copy = copy.deepcopy(sample_at0)
+
         sample_at0 = np.array(sample_at0)
         sample_at = self.scale_labels(sample_at0)
         print('sampling images at labels:', sample_at)
@@ -480,7 +482,7 @@ class CGAN():
         gen_imgs = 0.5 * gen_imgs + 0.5
 
 
-        fig, axs = plt.subplots(r, c, figsize=(15,150))
+        fig, axs = plt.subplots(r, c)
         cnt = 0
         for i in range(r):
             for j in range(c): # c=0: fake, c=1, real
@@ -490,16 +492,16 @@ class CGAN():
                 else:
                     if j == 0:
                         axs[i,j].imshow(gen_imgs[cnt,:,:,0], cmap='hot')
-                        axs[i,j].set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in sample_at0[cnt]))
+                        axs[i,j].set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in temp_copy[cnt]))
                         axs[i,j].axis('off')
                         cnt += 1
                     else: #show a real image
-                        print(sample_at0[i][0])
+                        print(temp_copy[i][0])
                         print(self.real_imgs_index.keys())
-                        if sample_at0[i][0] in self.real_imgs_index: #real images for that z are available
-                            sample_i = random.randint(0,len(self.real_imgs_index[sample_at0[i][0]]))
-                            print(self.real_imgs_index[sample_at0[i][0]])
-                            sample_i = self.real_imgs_index[sample_at0[i][0]][sample_i]
+                        if temp_copy[i][0] in self.real_imgs_index: #real images for that z are available
+                            sample_i = random.randint(0,len(self.real_imgs_index[temp_copy[i][0]]))
+                            print(self.real_imgs_index[temp_copy[i][0]])
+                            sample_i = self.real_imgs_index[temp_copy[i][0]][sample_i]
                             print(sample_i)
                             print(self.imgs.shape)
                             axs[i,j].imshow(self.imgs[sample_i,:,:,0], cmap='hot')
