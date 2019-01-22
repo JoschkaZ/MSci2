@@ -30,10 +30,10 @@ class CGAN():
 
         self.read_data()
 
-        optimizer = Adam(0.00005, 0.5)
-
-        ph_img = Input(shape=(256,256,1))
-        ph_label = Input(shape=(self.label_dim,))
+        if use_old_model == False:
+            optimizer = Adam(0.00005, 0.5)
+            ph_img = Input(shape=(256,256,1))
+            ph_label = Input(shape=(self.label_dim,))
 
         self.find_ps = True
 
@@ -69,10 +69,11 @@ class CGAN():
             print('Reading discriminator from: ', mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
             self.discriminator = load_model(mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
 
-        noise = Input(shape=(100,))
-        label = Input(shape=(self.label_dim,))
+
 
         if use_old_model == False:
+            noise = Input(shape=(100,))
+            label = Input(shape=(self.label_dim,))
             self.generator = self.build_generator(noise, label, use_old_model)
             img = self.generator([noise, label])
         else:
