@@ -18,6 +18,8 @@ import sys
 import stats_utils #TODO need to make stats_utils file
 from os import listdir
 from os.path import isfile, join
+import copy
+import random
 
 class CGAN():
 
