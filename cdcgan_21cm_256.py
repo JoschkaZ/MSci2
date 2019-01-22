@@ -16,8 +16,6 @@ from sys import platform
 import utils
 import sys
 import stats_utils #TODO need to make stats_utils file
-from os import listdir
-from os.path import isfile, join
 
 
 class CGAN():
@@ -75,17 +73,22 @@ class CGAN():
 
         if use_old_model == False:
             self.generator = self.build_generator(noise, label, use_old_model)
+            img = self.generator([noise, label])
         else:
             print('Reading generator from: ', mypath +'/21256generator_' + str(time_to_load) + '.h5')
             self.generator = load_model(mypath +'/21256generator_' + str(time_to_load) + '.h5')
 
-        img = self.generator([noise, label])
 
-        self.discriminator.trainable = False
-        valid = self.discriminator([img, label])
-        self.combined = Model([noise, label], valid)
-        self.combined.compile(loss=['binary_crossentropy'],
-            optimizer=optimizer)
+        if use_old_model == False:
+            self.discriminator.trainable = False
+            valid = self.discriminator([img, label])
+            self.combined = Model([noise, label], valid)
+            self.combined.compile(loss=['binary_crossentropy'],
+                optimizer=optimizer)
+        else:
+            print('Reading combined from: ', mypath +'/21256combined_' + str(time_to_load) + '.h5')
+            self.combined = load_model(mypath +'/21256combined_' + str(time_to_load) + '.h5')
+
 
     def read_data(self):
 
