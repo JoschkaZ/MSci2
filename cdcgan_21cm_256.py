@@ -59,8 +59,9 @@ class CGAN():
             print(files)
             time_to_load = 0
             for file in files:
-                model_time = int(file.split('weights_')[-1].split('.')[0])
-                time_to_load = max(time_to_load, model_time)
+                if 'weights' in file:
+                    model_time = int(file.split('weights_')[-1].split('.')[0])
+                    time_to_load = max(time_to_load, model_time)
             print('Time to load: ', time_to_load)
 
             # read epoch from images NOTE this assumes that the image with the heighest epoch was created by the newest model
