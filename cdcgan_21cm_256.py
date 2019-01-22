@@ -419,6 +419,7 @@ class CGAN():
                 self.discriminator.save_weights('models/21256generatorweights_' + str(self.start_time) + '.h5')
 
                 #if epoch % 2000 == 0:
+                print('calculating stats...')
                 self.calc_stats(epoch)
 
     def calc_stats(self, epoch):
