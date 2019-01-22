@@ -1,3 +1,5 @@
+import numpy as np
+
 def crossraPsd2d(img1,img2,show=False):
     s1 = len(img1)
     s2 = len(img2)
