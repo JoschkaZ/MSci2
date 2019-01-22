@@ -386,8 +386,8 @@ class CGAN():
         [10.5],
         [11.]
         ]
-        r = 3
-        c = 3
+        r = len(sample_at)
+        c = 2
 
         sample_at = np.array(sample_at)
         sample_at = self.scale_labels(sample_at)
@@ -404,16 +404,23 @@ class CGAN():
         fig, axs = plt.subplots(r, c)
         cnt = 0
         for i in range(r):
-            for j in range(c):
-                if cnt >= len(gen_imgs):
+            for j in range(c): # c=0: fake, c=1, real
+                if cnt >= len(gen_imgs) and j == 0:
                     axs[i,j].axis('off')
                     break
                 else:
-                    axs[i,j].imshow(gen_imgs[cnt,:,:,0], cmap='hot')
-                    axs[i,j].set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in sample_at[cnt]))
-                    #axs[i,j].set_title("Digit: %d" % '_'.join(sample_at[cnt]))
-                    axs[i,j].axis('off')
-                    cnt += 1
+                    if j == 0:
+                        axs[i,j].imshow(gen_imgs[cnt,:,:,0], cmap='hot')
+                        axs[i,j].set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in sample_at[cnt]))
+                        axs[i,j].axis('off')
+                        cnt += 1
+                    else: #show a real image
+                        if sample_at[i] in self.real_imgs_index: #real images for that z are available
+                            sample_i = random.randint(0,len(self.real_imgs_index[sample_at[i]]))
+                            sample_i = self.real_imgs_index[sample_at[i]][sample_i]
+                            axs[i,j].imshow(self.imgs[sample_i,:,:,0], cmap='hot')
+                            axs[i,j].set_title("")
+                            axs[i,j].axis('off')
         if platform == 'linux':
             user = utils.get_user()
             print(user)
