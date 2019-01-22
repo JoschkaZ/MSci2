@@ -107,3 +107,13 @@ plt.plot(S[0][0:])
 plt.show()
 plt.plot(S[1][0:])
 plt.show()
+
+
+
+#%%
+labels = [1, 1, 2, 1, 3, 2]
+labels.index(2)
+[x for x in labels==1]
+
+#%%
+[[5]]*10

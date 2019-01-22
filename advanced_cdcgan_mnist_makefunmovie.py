@@ -16,12 +16,16 @@ import numpy as np
 print('keras: %s' % keras.__version__)
 #%%
 
-generator = load_model('models/generator_1547496692.h5')
+generator = load_model(r'C:\\Users\\Joschka\\github\\MSci2\\models\\21256generator_1547722536.h5')
 
 
 
-
-sampled_labels = np.arange(-1.5, 1.5, 0.01).reshape(-1, 1)
+# 7,    8, 9,  10, 11
+#-1, -0.5, 0, 0.5, 1
+#sampled_labels = np.arange(-1.5, 1.5, 0.01).reshape(-1, 1)
+sampled_labels = np.arange(-1., 1.5, 0.5).reshape(-1, 1)
+print(sampled_labels)
+#%%
 sampled_labels_scaled = (sampled_labels.astype(np.float32)-0) / 1
 print(sampled_labels_scaled)
 
@@ -29,12 +33,13 @@ print(sampled_labels_scaled)
 
 
 noise = np.random.normal(0, 1, (1, 100)) #sample noise once
+print(noise.shape)
+
+#%%
 
 for i in range(len(sampled_labels)):
 
-
     gen_imgs = generator.predict([noise, sampled_labels[i:i+1]])
-    print(gen_imgs)
 
     gen_imgs = 0.5 * gen_imgs + 0.5
     plt.imshow(gen_imgs[0,:,:,0])

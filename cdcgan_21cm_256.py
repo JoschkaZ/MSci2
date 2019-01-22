@@ -14,11 +14,12 @@ from keras.models import load_model
 import pickle as pkl
 from sys import platform
 import utils
+import sys
 
 
 class CGAN():
 
-    def __init__(self):
+    def __init__(self, use_old_model):
         self.imgs = []
         self.labels = []
         self.start_time = str(time.time()).split('.')[0]
@@ -31,13 +32,35 @@ class CGAN():
         ph_img = Input(shape=(256,256,1))
         ph_label = Input(shape=(self.label_dim,))
 
-        self.discriminator = self.build_discriminator(ph_img, ph_label)
-        self.discriminator.compile(loss=['binary_crossentropy'],optimizer=optimizer,metrics=['accuracy'])
 
+        if use_old_model == False:
+            self.discriminator = self.build_discriminator(ph_img, ph_label)
+            self.discriminator.compile(loss=['binary_crossentropy'],optimizer=optimizer,metrics=['accuracy'])
+        else:
+
+            # identify model to load
+            path = utils.get_path()
+            mypath = r'/home/' + user + r'/MSci2/models'
+            files = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+            print('Models found:')
+            print(files)
+            time_to_load = 0
+            for file in files:
+                model_time = int(file.split('_')[-1].split('.')[0])
+                time_to_load = max(time_to_load, model_time)
+            print('Time to load: ', time_to_load)
+
+            print('Reading discriminator from: ', mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
+            self.discriminator = keras.models.load_model(mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
 
         noise = Input(shape=(100,))
         label = Input(shape=(self.label_dim,))
-        self.generator = self.build_generator(noise, label)
+
+        if use_old_model == False:
+            self.generator = self.build_generator(noise, label, use_old_model)
+        else:
+            print('Reading generator from: ', mypath +'/21256generator_' + str(time_to_load) + '.h5')
+            self.generator = keras.models.load_model(mypath +'/21256generator_' + str(time_to_load) + '.h5')
 
         img = self.generator([noise, label])
 
@@ -136,7 +159,6 @@ class CGAN():
         return model
 
     def build_discriminator(self, img, con):
-
 
         hid = Conv2D(32, kernel_size=5, strides=2, padding="same")(img)
         hid = LeakyReLU(alpha=0.2)(hid)
@@ -337,5 +359,15 @@ class CGAN():
 
 
 if __name__ == '__main__':
-    cgan = CGAN()
-    cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
+
+    args = sys.argv
+    if args[1] == 'new':
+        cgan = CGAN(use_old_model=False)
+        cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
+    elif args[1] == 'continue':
+        cgan = CGAN(use_old_model=True)
+        cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
+    else:
+        print('Argument required.')
+        print('write: "python cdcgan_21cm_256.py new" to use a new model.')
+        print('write: "python cdcgan_21cm_256.py continue" to continue training the last model.')
