@@ -30,6 +30,73 @@ class CGAN():
 
         self.read_data()
 
+        optimizer = Adam(0.00005, 0.5)
+        ph_img = Input(shape=(256,256,1))
+        ph_label = Input(shape=(self.label_dim,))
+
+        self.find_ps = True
+
+        self.discriminator = self.build_discriminator(ph_img, ph_label)
+        self.discriminator.compile(loss=['binary_crossentropy'],optimizer=optimizer,metrics=['accuracy'])
+
+        noise = Input(shape=(100,))
+        label = Input(shape=(self.label_dim,))
+        self.generator = self.build_generator(noise, label, use_old_model)
+        img = self.generator([noise, label])
+
+        self.discriminator.trainable = False
+        valid = self.discriminator([img, label])
+        self.combined = Model([noise, label], valid)
+        self.combined.compile(loss=['binary_crossentropy'],
+            optimizer=optimizer)
+
+        if use_old_model == True:
+            # identify model to load
+            user = utils.get_user()
+            mypath = r'/home/' + user + r'/MSci2/models'
+            files = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+            print('Models found:')
+            print(files)
+            time_to_load = 0
+            for file in files:
+                model_time = int(file.split('weights_')[-1].split('.')[0])
+                time_to_load = max(time_to_load, model_time)
+            print('Time to load: ', time_to_load)
+
+            # read epoch from images NOTE this assumes that the image with the heighest epoch was created by the newest model
+            imgpath = r'/home/' + user + r'/MSci2/images'
+            files = [f for f in listdir(imgpath) if isfile(join(imgpath, f))]
+            start_epoch = 0
+            for file in files:
+                if '_' not in file:
+                    img_epoch = int(file.split('.')[0])
+                    start_epoch = max(start_epoch, img_epoch)
+
+            print('Epoch to start at: ', start_epoch)
+            self.start_epoch = start_epoch +1
+
+            print('Reading weights from: ')
+            print(mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
+            self.discriminator.load_weights(mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
+            print(mypath +'/21256generator_' + str(time_to_load) + '.h5')
+            self.generator.load_weights(mypath +'/21256generator_' + str(time_to_load) + '.h5')
+            print(mypath +'/21256combined_' + str(time_to_load) + '.h5')
+            self.combined.load_weights(mypath +'/21256combined_' + str(time_to_load) + '.h5')
+
+
+
+
+
+    '''
+    def __init__(self, use_old_model):
+        self.imgs = []
+        self.labels = []
+        self.start_time = str(time.time()).split('.')[0]
+        self.label_dim = -1
+        self.start_epoch = None
+
+        self.read_data()
+
         if use_old_model == False:
             optimizer = Adam(0.00005, 0.5)
             ph_img = Input(shape=(256,256,1))
@@ -67,7 +134,7 @@ class CGAN():
             self.start_epoch = start_epoch +1
 
             print('Reading discriminator from: ', mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
-            self.discriminator = load_model(mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
+            #self.discriminator = load_model(mypath +'/21256discriminator_' + str(time_to_load) + '.h5')
 
 
 
@@ -78,7 +145,7 @@ class CGAN():
             img = self.generator([noise, label])
         else:
             print('Reading generator from: ', mypath +'/21256generator_' + str(time_to_load) + '.h5')
-            self.generator = load_model(mypath +'/21256generator_' + str(time_to_load) + '.h5')
+            #self.generator = load_model(mypath +'/21256generator_' + str(time_to_load) + '.h5')
 
 
         if use_old_model == False:
@@ -90,6 +157,8 @@ class CGAN():
         else:
             print('Reading combined from: ', mypath +'/21256combined_' + str(time_to_load) + '.h5')
             self.combined = load_model(mypath +'/21256combined_' + str(time_to_load) + '.h5')
+    '''
+
 
 
     def read_data(self):
@@ -340,8 +409,11 @@ class CGAN():
             if epoch % save_model_interval == 0:
                 print('saving models...')
                 self.discriminator.save('models/21256discriminator_' + str(self.start_time) + '.h5')
+                self.discriminator.save_weights('models/21256discriminatorweights_' + str(self.start_time) + '.h5')
                 self.combined.save('models/21256combined_' + str(self.start_time) + '.h5')
+                self.discriminator.save_weights('models/21256combinedweights_' + str(self.start_time) + '.h5')
                 self.generator.save('models/21256generator_' + str(self.start_time) + '.h5')
+                self.discriminator.save_weights('models/21256generatorweights_' + str(self.start_time) + '.h5')
 
                 #if epoch % 2000 == 0:
                 self.calc_stats(epoch)
@@ -378,7 +450,6 @@ class CGAN():
             else: #windows
                 plt.savefig("images/ps_%d.png" % epoch)
             plt.close()
-
 
     def sample_images(self, epoch):
 
@@ -435,8 +506,6 @@ class CGAN():
         else: #windows
             fig.savefig("images/%d.png" % epoch)
         plt.close()
-
-
 
 if __name__ == '__main__':
 
