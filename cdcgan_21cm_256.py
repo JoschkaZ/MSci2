@@ -41,7 +41,7 @@ class CGAN():
 
         noise = Input(shape=(100,))
         label = Input(shape=(self.label_dim,))
-        self.generator = self.build_generator(noise, label, use_old_model)
+        self.generator = self.build_generator(noise, label)
         img = self.generator([noise, label])
 
         self.discriminator.trainable = False
@@ -479,7 +479,7 @@ class CGAN():
         gen_imgs = 0.5 * gen_imgs + 0.5
 
 
-        fig, axs = plt.subplots(r, c)
+        fig, axs = plt.subplots(r, c, figsize=(15,150))
         cnt = 0
         for i in range(r):
             for j in range(c): # c=0: fake, c=1, real
@@ -493,9 +493,14 @@ class CGAN():
                         axs[i,j].axis('off')
                         cnt += 1
                     else: #show a real image
-                        if sample_at[i] in self.real_imgs_index: #real images for that z are available
-                            sample_i = random.randint(0,len(self.real_imgs_index[sample_at[i]]))
-                            sample_i = self.real_imgs_index[sample_at[i]][sample_i]
+                        print(sample_at[i][0])
+                        print(self.real_imgs_index.keys())
+                        if sample_at[i][0] in self.real_imgs_index: #real images for that z are available
+                            sample_i = random.randint(0,len(self.real_imgs_index[sample_at[i][0]]))
+                            print(self.real_imgs_index[sample_at[i][0]])
+                            sample_i = self.real_imgs_index[sample_at[i][0]][sample_i]
+                            print(sample_i)
+                            print(self.imgs.shape)
                             axs[i,j].imshow(self.imgs[sample_i,:,:,0], cmap='hot')
                             axs[i,j].set_title("")
                             axs[i,j].axis('off')
