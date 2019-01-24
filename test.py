@@ -122,3 +122,27 @@ labels.index(2)
 #%
 for i in range(5,10):
     print(i)
+
+
+
+#%%
+
+
+a = np.array([[1,2],[3,4]])
+print((a-5)/2)
+b = {5: 'a', 8: 'b'}
+print(max(b.keys()))
+
+#%%
+
+fig, axs = plt.subplots(9, 2,figsize=(4,18), dpi=250)
+#fig = plt.figure(figsize=(20, 6))
+
+y = [0,1]
+for i in range(9):
+    for j in range(2):
+        axs[i,j].plot(y)
+        axs[i,j].set_title('Label')
+        axs[i,j].axis('off')
+
+plt.show()

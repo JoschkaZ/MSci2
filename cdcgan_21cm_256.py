@@ -438,8 +438,13 @@ class CGAN():
 
         else:
             noise = np.random.normal(0, 1, (100, 100))
+
+            mal = max(self.real_imgs_index.keys())
+            mil = min(self.real_imgs_index.keys())
             for z in self.real_imgs_index:
-                gen_imgs = self.generator.predict([noise, np.reshape([[z]]*100,(100,1))])
+                z_vec = np.array([[z]]*100)
+                z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
+                gen_imgs = self.generator.predict([noise, np.reshape(z_vec,(100,1))])
                 gen_imgs = np.squeeze(gen_imgs)
                 fake_ave_ps,fake_ps_std,k_list_fake = stats_utils.produce_average_ps(gen_imgs)
                 plt.errorbar(x=k_list_fake[1:], y=fake_ave_ps[1:], yerr=fake_ps_std[1:], alpha=0.5, label="fake z="+str(z))
@@ -485,7 +490,7 @@ class CGAN():
         gen_imgs = 0.5 * gen_imgs + 0.5
 
 
-        fig, axs = plt.subplots(r, c)
+        fig, axs = plt.subplots(r, c, figsize=(4,18), dpi=250)
         cnt = 0
         for i in range(r):
             for j in range(c): # c=0: fake, c=1, real
@@ -509,7 +514,7 @@ class CGAN():
                             print(self.imgs.shape)
                             axs[i,j].imshow(self.imgs[sample_i,:,:,0], cmap='hot')
                             axs[i,j].set_title("")
-                            axs[i,j].axis('off')
+                        axs[i,j].axis('off')
         if platform == 'linux':
             user = utils.get_user()
             print(user)
