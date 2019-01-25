@@ -32,7 +32,7 @@ class CGAN():
 
         self.read_data()
 
-        optimizer = Adam(0.005, 0.5)
+        optimizer = Adam(0.00005, 0.5)
         ph_img = Input(shape=(256,256,1))
         ph_label = Input(shape=(self.label_dim,))
 
