@@ -20,3 +20,26 @@ for entry in lh:
 
 plt.scatter(x,y)
 plt.show()
+
+#%%
+import numpy as np
+import pickle as pkl
+
+data = []
+
+img1 = np.array([[0,1],[2,3]])
+img2 = np.array([[0,0],[0,0]])
+
+for fake in range(100):
+
+    for z in range(7,12):
+        if z == 7:
+            img = np.repeat(np.repeat(img1,128, axis=0), 128, axis=1)
+        else:
+            img = np.repeat(np.repeat(img2,128, axis=0), 128, axis=1)
+        #print(img)
+
+        data.append([img, 'something_z'+str(z) + '_something'])
+
+
+pkl.dump(data, open("faketest_images.pkl", "wb"))

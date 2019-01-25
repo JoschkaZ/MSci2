@@ -32,7 +32,7 @@ class CGAN():
 
         self.read_data()
 
-        optimizer = Adam(0.00005, 0.5)
+        optimizer = Adam(0.005, 0.5)
         ph_img = Input(shape=(256,256,1))
         ph_label = Input(shape=(self.label_dim,))
 
@@ -162,13 +162,11 @@ class CGAN():
             self.combined = load_model(mypath +'/21256combined_' + str(time_to_load) + '.h5')
     '''
 
-
-
     def read_data(self):
 
         print('importing data...')
-        #data = pkl.load( open( "C:\Outputs\slices2_32.pkl", "rb" ) )
-        data = pkl.load(open("/home/jz8415/slices2.pkl", "rb"))
+        data = pkl.load( open( r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb" ) )
+        #data = pkl.load(open("/home/jz8415/slices2.pkl", "rb"))
         print('data imported!')
 
         self.imgs = []
@@ -307,7 +305,7 @@ class CGAN():
         merged_layer = Concatenate()([hid, con1])
         # -> 200
 
-        out = Dense(1, activation='sigmoid')(hid)
+        out = Dense(1, activation='sigmoid')(merged_layer)
         # -> 1
 
         model = Model(inputs=[img, con], outputs=out)
@@ -318,19 +316,20 @@ class CGAN():
         print('minmax scaling images...')
         mmax = np.max(self.imgs)
         mmin = np.min(self.imgs)
+        print('max min = ', mmax, mmin)
         self.imgs = (self.imgs - (mmax+mmin)/2.) / ((mmax-mmin) / 2.)
         print('expanding dimension of images...')
         self.imgs = np.expand_dims(self.imgs, axis=3)
 
-    def scale_labels(self, l, verbose=0):
+    def scale_labels(self, l, verbose=1):
         length = len(l)
-        step = int(length / 5.)
+        step = int(length / 10.)
         if verbose == 1:
             print('scaling labels...')
             print('initial labels')
             print(l[0:length:step])
-            print(l.max(axis=0))
-            print(l.min(axis=0))
+            print('max', l.max(axis=0))
+            print('min', l.min(axis=0))
         mal = l.max(axis=0)
         mil = l.min(axis=0)
 
@@ -353,8 +352,6 @@ class CGAN():
         print('FINAL SHAPES')
         print(self.imgs.shape)
         print(self.labels.shape)
-
-
 
         #Adversarial ground truths
         valid = np.ones((batch_size, 1))
@@ -420,7 +417,7 @@ class CGAN():
 
                 #if epoch % 2000 == 0:
                 print('calculating stats...')
-                self.calc_stats(epoch)
+                #self.calc_stats(epoch)
 
     def calc_stats(self, epoch):
         if self.find_ps == True:
@@ -454,7 +451,6 @@ class CGAN():
                 plt.legend()
             if platform == 'linux':
                 user = utils.get_user()
-                print(user)
                 plt.savefig(r"/home/" + user + r"/MSci2/images/ps_%d.png" % epoch)
             else: #windows
                 plt.savefig("images/ps_%d.png" % epoch)
@@ -480,14 +476,14 @@ class CGAN():
 
         sample_at0 = np.array(sample_at0)
         sample_at = self.scale_labels(sample_at0)
-        print('sampling images at labels:', sample_at)
 
         noise = np.random.normal(0, 1, (len(sample_at), 100))
 
         gen_imgs = self.generator.predict([noise, sample_at])
 
         # Rescale images 0 - 1
-        gen_imgs = 0.5 * gen_imgs + 0.5
+        # gen_imgs = 0.5 * gen_imgs + 0.5
+        print('sampling images at labels: ', sample_at)
 
 
         fig, axs = plt.subplots(r, c, figsize=(4,18), dpi=250)
@@ -499,25 +495,19 @@ class CGAN():
                     break
                 else:
                     if j == 0:
-                        axs[i,j].imshow(gen_imgs[cnt,:,:,0], cmap='hot')
+                        axs[i,j].imshow(gen_imgs[cnt,:,:,0], cmap='hot', vmin=-1, vmax=1)
                         axs[i,j].set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in temp_copy[cnt]))
                         axs[i,j].axis('off')
                         cnt += 1
                     else: #show a real image
-                        print(temp_copy[i][0])
-                        print(self.real_imgs_index.keys())
                         if temp_copy[i][0] in self.real_imgs_index: #real images for that z are available
-                            sample_i = random.randint(0,len(self.real_imgs_index[temp_copy[i][0]]))
-                            print(self.real_imgs_index[temp_copy[i][0]])
+                            sample_i = random.randint(0,len(self.real_imgs_index[temp_copy[i][0]])-1)
                             sample_i = self.real_imgs_index[temp_copy[i][0]][sample_i]
-                            print(sample_i)
-                            print(self.imgs.shape)
-                            axs[i,j].imshow(self.imgs[sample_i,:,:,0], cmap='hot')
+                            axs[i,j].imshow(self.imgs[sample_i,:,:,0], cmap='hot', vmin=-1, vmax=1)
                             axs[i,j].set_title("")
                         axs[i,j].axis('off')
         if platform == 'linux':
             user = utils.get_user()
-            print(user)
             fig.savefig(r"/home/" + user + r"/MSci2/images/%d.png" % epoch)
         else: #windows
             fig.savefig("images/%d.png" % epoch)
@@ -529,11 +519,11 @@ if __name__ == '__main__':
     if args[1] == 'new':
         cgan = CGAN(use_old_model=False)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=32, sample_interval=2000, save_model_interval = 2000)
+        cgan.train(epochs=400000, batch_size=2, sample_interval=5, save_model_interval = 5)
     elif args[1] == 'continue':
         cgan = CGAN(use_old_model=True)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=32, sample_interval=2000, save_model_interval = 2000)
+        cgan.train(epochs=400000, batch_size=2, sample_interval=5, save_model_interval = 5)
     else:
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
