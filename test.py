@@ -138,10 +138,14 @@ print(max(b.keys()))
 fig, axs = plt.subplots(9, 2,figsize=(4,18), dpi=250)
 #fig = plt.figure(figsize=(20, 6))
 
-y = [0,1]
+y = [[0,1],[2,3]]
+x = [[0,10],[30,30]]
 for i in range(9):
     for j in range(2):
-        axs[i,j].plot(y)
+        if j==0 and i==0:
+            axs[i,j].imshow(x)
+        else:
+            axs[i,j].imshow(y)
         axs[i,j].set_title('Label')
         axs[i,j].axis('off')
 
