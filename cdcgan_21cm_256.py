@@ -32,7 +32,7 @@ class CGAN():
 
         self.read_data()
 
-        optimizer = Adam(0.00005, 0.5)
+        optimizer = Adam(0.001, 0.5)
         ph_img = Input(shape=(256,256,1))
         ph_label = Input(shape=(self.label_dim,))
 
@@ -307,7 +307,7 @@ class CGAN():
         merged_layer = Concatenate()([hid, con1])
         # -> 200
 
-        out = Dense(1, activation='sigmoid')(hid)
+        out = Dense(1, activation='sigmoid')(merged_layer)
         # -> 1
 
         model = Model(inputs=[img, con], outputs=out)
@@ -504,14 +504,14 @@ class CGAN():
                         axs[i,j].axis('off')
                         cnt += 1
                     else: #show a real image
-                        print(temp_copy[i][0])
-                        print(self.real_imgs_index.keys())
+                        #print(temp_copy[i][0])
+                        #print(self.real_imgs_index.keys())
                         if temp_copy[i][0] in self.real_imgs_index: #real images for that z are available
                             sample_i = random.randint(0,len(self.real_imgs_index[temp_copy[i][0]]))
-                            print(self.real_imgs_index[temp_copy[i][0]])
+                            #print(self.real_imgs_index[temp_copy[i][0]])
                             sample_i = self.real_imgs_index[temp_copy[i][0]][sample_i]
-                            print(sample_i)
-                            print(self.imgs.shape)
+                            #print(sample_i)
+                            #print(self.imgs.shape)
                             axs[i,j].imshow(self.imgs[sample_i,:,:,0], cmap='hot')
                             axs[i,j].set_title("")
                         axs[i,j].axis('off')
