@@ -91,6 +91,7 @@ class CGAN():
 
 
     '''
+    
     def __init__(self, use_old_model):
         self.imgs = []
         self.labels = []
