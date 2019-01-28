@@ -33,19 +33,25 @@ img2 = np.array([[0,0],[0,0]])
 
 
 #%%
-for z in range(7,12):
-    img = []
-    for y in range(256):
-        row = []
-        for x in range(256):
-            pixel = np.sin((x/256.*6.28*(z-6)))
-            row.append(pixel)
-        img.append(row)
+data = []
+for fake in range(1000):
+    for z in range(7,12):
+        img = []
+        for y in range(28):
+            row = []
+            for x in range(28):
+                if (np.abs(x-14) < 9) and (np.abs(y-14) < 9):
+                    pixel = np.sin((x/63.*6.28*(z-6))) + np.random.uniform()
+                else:
+                    pixel = np.sin((x/63.*6.28*(z-6))) + np.random.uniform()
+                row.append(pixel)
+            img.append(row)
 
 
-    plt.imshow(img)
-    plt.show()
-    for fake in range(100):
+        if fake == 27:
+            plt.imshow(img)
+            plt.show()
+
 
         #if z == 7:
         #    img = np.repeat(np.repeat(img1,128, axis=0), 128, axis=1)
@@ -57,3 +63,4 @@ for z in range(7,12):
 
 
 pkl.dump(data, open("faketest_images.pkl", "wb"))
+print('duneÄ)')
