@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from keras.datasets import mnist
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, Add
+from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, Add, ReLU
 from keras.layers import BatchNormalization, Activation, Embedding, ZeroPadding2D, Conv2DTranspose
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
@@ -65,7 +65,8 @@ class CGAN():
 
         merged_input = Concatenate()([con1, noise1])
         #100+100
-
+        '''
+        #mnist version
         hid = Dense(560)(merged_input)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
@@ -108,6 +109,56 @@ class CGAN():
         hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
+        #28x28x128
+
+        hid = Conv2D(1, kernel_size=5, strides=1, padding="same")(hid)
+        out = Activation("tanh")(hid)
+        #28x28x1
+        '''
+
+        #suggested version
+        hid = Dense(560)(merged_input)
+        hid = BatchNormalization(momentum=0.9)(hid)
+        hid = ReLU()(hid)
+        #560
+
+        hid = Dense(128 * 7 * 7)(hid)
+        hid = BatchNormalization(momentum=0.9)(hid)
+        hid = ReLU()(hid)
+        #128*7*7
+
+
+        hid = Reshape((7, 7, 128))(hid)
+        #7x7x128
+
+        hid = Conv2D(128, kernel_size=4, strides=1,padding='same')(hid)
+        hid = BatchNormalization(momentum=0.9)(hid)
+        hid = ReLU()(hid)
+        #7x7x128
+
+        hid = Conv2DTranspose(128, 4, strides=2, padding='same')(hid)
+        hid = BatchNormalization(momentum=0.9)(hid)
+        hid = ReLU()(hid)
+        #14x14x128
+
+        hid = Conv2D(128, kernel_size=5, strides=1,padding='same')(hid)
+        hid = BatchNormalization(momentum=0.9)(hid)
+        hid = ReLU()(hid)
+        #14x14x128
+
+        hid = Conv2DTranspose(128, 4, strides=2, padding='same')(hid)
+        hid = BatchNormalization(momentum=0.9)(hid)
+        hid = ReLU()(hid)
+        #28x28x128
+
+        hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
+        hid = BatchNormalization(momentum=0.9)(hid)
+        hid = ReLU()(hid)
+        #28x28x128
+
+        hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
+        hid = BatchNormalization(momentum=0.9)(hid)
+        hid = ReLU()(hid)
         #28x28x128
 
         hid = Conv2D(1, kernel_size=5, strides=1, padding="same")(hid)
@@ -184,8 +235,8 @@ class CGAN():
 
         print('importing data...')
         #data = pkl.load( open( "C:\Outputs\slices2_32.pkl", "rb" ) )
-        #data = pkl.load(open("/home/jz8415/slices2.pkl", "rb"))
-        data = pkl.load(open(r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb"))
+        data = pkl.load(open("/home/hk2315/MSci2/faketest_images.pkl", "rb"))
+        #data = pkl.load(open(r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb"))
         print('data imported!')
 
         self.imgs = []
@@ -224,13 +275,15 @@ class CGAN():
     def min_max_scale_images(self):
         print('minmax scaling images...')
         print(self.imgs.shape)
-        mmax = np.max(self.imgs)
-        mmin = np.min(self.imgs)
-        print('mmax', mmax)
-        print('mmin', mmin)
-        print(self.imgs[0][14])
-        self.imgs = (self.imgs.astype(np.float32) - (mmax+mmin)/2.) / ((mmax-mmin) / 2.)
-        print(self.imgs[0][14])
+        print('leeeeeeeength',len(self.imgs))
+        for k in range(len(self.imgs)):
+            mmax = np.max(self.imgs[k]) #shouldnt the scaling be done per image rather than looking at min/max out of all images???
+            mmin = np.min(self.imgs[k])
+            #print('mmax', mmax)
+            #print('mmin', mmin)
+            #print(self.imgs[0][14])
+            self.imgs[k] = (self.imgs[k].astype(np.float32) - (mmax+mmin)/2.) / ((mmax-mmin) / 2.)
+        #print(self.imgs[0][14])
         print('expanding dimension of images...')
         self.imgs = np.expand_dims(self.imgs, axis=3)
 
@@ -248,7 +301,7 @@ class CGAN():
 
         for i in range(len(l)):
             for j in range(len(l[i])):
-                l[i][j] = (l[i][j].astype(np.float32) - (mal+mil)/2.) / ((mal-mil)/2.)
+                l[i][j] = (l[i][j].astype(np.float32) - (mal+mil)/2.) / ((mal-mil)/2.) #wouldnt j always be 0? (thats not a problem but just a question)
 
         if verbose == 0:
             print('scaled labels')
@@ -266,7 +319,7 @@ class CGAN():
         print(self.imgs.shape)
         print(self.labels.shape)
 
-        '''
+        """
         (X_train, y_train), (_, _) = mnist.load_data()
         print(X_train.shape)
         print(y_train.shape)
@@ -282,12 +335,12 @@ class CGAN():
         print('FINAL SHAPES')
         print(X_train.shape)
         print(y_train.shape)
-        print(X_train[0])
-        '''
+        #print(X_train[0])
+        """
         print('FINAL SHAPES')
         print(self.imgs.shape)
         print(self.labels.shape)
-        print(self.imgs[0])
+        #print(self.imgs[0])
 
         # Adversarial ground truths
         valid = np.ones((batch_size, 1))
@@ -302,8 +355,10 @@ class CGAN():
             # ---------------------
 
             # Select a random half batch of images
-            #idx = np.random.randint(0, X_train.shape[0], batch_size)
-            #imgs, labels = X_train[idx], y_train[idx]
+            """
+            idx = np.random.randint(0, X_train.shape[0], batch_size)
+            imgs, labels = X_train[idx], y_train[idx]
+            """
             idx = np.random.randint(0, self.imgs.shape[0], batch_size)
             imgs, labels = self.imgs[idx], self.labels[idx]
 
