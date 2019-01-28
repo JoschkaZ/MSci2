@@ -19,7 +19,7 @@ import stats_utils #TODO need to make stats_utils file
 from os import listdir
 from os.path import isfile, join
 import copy
-import random
+import randomread
 
 class CGAN():
 
@@ -91,7 +91,7 @@ class CGAN():
 
 
     '''
-    
+
     def __init__(self, use_old_model):
         self.imgs = []
         self.labels = []

@@ -20,7 +20,7 @@ generator = load_model(r'C:\\Users\\Joschka\\github\\MSci2\\models\\21256generat
 
 
 
-# 7,    8, 9,  10, 11
+# 7, 8, 9,  10, 11
 #-1, -0.5, 0, 0.5, 1
 #sampled_labels = np.arange(-1.5, 1.5, 0.01).reshape(-1, 1)
 sampled_labels = np.arange(-1., 1.5, 0.5).reshape(-1, 1)
