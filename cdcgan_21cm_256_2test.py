@@ -1,10 +1,10 @@
 
 from __future__ import print_function, division
 #from keras.datasets import mnist
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, Add
+from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, Add, ReLU
 from keras.layers import BatchNormalization, Activation, Embedding, ZeroPadding2D, Conv2DTranspose, Cropping2D
 from keras.layers.advanced_activations import LeakyReLU
-from keras.activations import relu, tanh
+#from keras.activations import tanh
 from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
@@ -33,7 +33,7 @@ class CGAN():
 
         self.read_data()
 
-        optimizer = Adam(0.0002, 0.5)
+        optimizer = Adam(0.005, 0.5)
         ph_img = Input(shape=(256,256,1))
         ph_label = Input(shape=(self.label_dim,))
 
@@ -172,8 +172,9 @@ class CGAN():
 
         print('importing data...')
         #data = pkl.load( open( "C:\Outputs\slices2_32.pkl", "rb" ) )
-        #data = pkl.load(open("/home/jz8415/slices2.pkl", "rb"))
-        data = pkl.load(open(r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb"))
+        data = pkl.load(open("/home/hk2315/MSci2/faketest_images.pkl", "rb"))
+        #data = pkl.load(open(r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb"))
+
         print('data imported!')
 
         self.imgs = []
@@ -219,9 +220,9 @@ class CGAN():
         merged_input = Concatenate()([con1, noise1])
         # -> 200
 
-        hid = Dense(1024*4*4, activation='relu')(merged_input)
+        hid = Dense(1024*4*4)(merged_input)
         hid = BatchNormalization(momentum=0.9)(hid)
-        hid = relu()(hid)
+        hid = ReLU()(hid)
         # -> 1024*4*4
 
         hid = Reshape((4,4,1024))(hid)
@@ -229,32 +230,33 @@ class CGAN():
 
         hid = Conv2DTranspose(676, 5, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
-        hid = relu()(hid)
+        hid = ReLU()(hid)
         # -> 676x8x8
 
         hid = Conv2DTranspose(446, 5, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
-        hid = relu()(hid)
+        hid = ReLU()(hid)
         # -> 446x16x16
 
         hid = Conv2DTranspose(294, 5, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
-        hid = relu()(hid)
+        hid = ReLU()(hid)
         # -> 294x32x32
 
         hid = Conv2DTranspose(194, 5, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
-        hid = relu()(hid)
+        hid = ReLU()(hid)
         # -> 194x64x64
 
         hid = Conv2DTranspose(128, 5, strides=2, padding='same')(hid) #128
         hid = BatchNormalization(momentum=0.9)(hid)
-        hid = relu()(hid)
+        hid = ReLU()(hid)
         # -> 128x128x128
 
         hid = Conv2DTranspose(1, 5, strides=2, padding='same')(hid) # 1
         hid = BatchNormalization(momentum=0.9)(hid)
-        out = tanh()(hid)
+        #out = tanh()(hid)
+        out = Activation("tanh")(hid)
         # -> 1x256x256
 
         model =  Model([noise, con], out)
@@ -527,11 +529,11 @@ if __name__ == '__main__':
     if args[1] == 'new':
         cgan = CGAN(use_old_model=False)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=128, sample_interval=50, save_model_interval = 2000)
+        cgan.train(epochs=400000, batch_size=64, sample_interval=50, save_model_interval = 2000)
     elif args[1] == 'continue':
         cgan = CGAN(use_old_model=True)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=128, sample_interval=50, save_model_interval = 2000)
+        cgan.train(epochs=400000, batch_size=64, sample_interval=50, save_model_interval = 2000)
     else:
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
