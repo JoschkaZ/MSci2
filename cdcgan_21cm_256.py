@@ -19,7 +19,7 @@ import stats_utils #TODO need to make stats_utils file
 from os import listdir
 from os.path import isfile, join
 import copy
-import randomread
+import random
 
 class CGAN():
 
@@ -32,7 +32,7 @@ class CGAN():
 
         self.read_data()
 
-        optimizer = Adam(0.001, 0.5)
+        optimizer = Adam(0.00001, 0.5)
         ph_img = Input(shape=(256,256,1))
         ph_label = Input(shape=(self.label_dim,))
 
@@ -91,7 +91,6 @@ class CGAN():
 
 
     '''
-
     def __init__(self, use_old_model):
         self.imgs = []
         self.labels = []
@@ -530,11 +529,11 @@ if __name__ == '__main__':
     if args[1] == 'new':
         cgan = CGAN(use_old_model=False)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=32, sample_interval=2000, save_model_interval = 2000)
+        cgan.train(epochs=400000, batch_size=32, sample_interval=5000, save_model_interval = 5000)
     elif args[1] == 'continue':
         cgan = CGAN(use_old_model=True)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=32, sample_interval=2000, save_model_interval = 2000)
+        cgan.train(epochs=400000, batch_size=32, sample_interval=5000, save_model_interval = 5000)
     else:
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
