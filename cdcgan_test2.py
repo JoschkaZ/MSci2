@@ -1,7 +1,11 @@
 from __future__ import print_function, division
 from keras.datasets import mnist
 <<<<<<< HEAD
+<<<<<<< HEAD
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, Add
+=======
+from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, Add, ReLU
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
 =======
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, Add, ReLU
 >>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
@@ -70,7 +74,12 @@ class CGAN():
         merged_input = Concatenate()([con1, noise1])
         #100+100
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+        '''
+        #mnist version
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
 =======
         '''
         #mnist version
@@ -123,7 +132,10 @@ class CGAN():
         out = Activation("tanh")(hid)
         #28x28x1
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
         '''
 
         #suggested version
@@ -174,6 +186,9 @@ class CGAN():
         hid = Conv2D(1, kernel_size=5, strides=1, padding="same")(hid)
         out = Activation("tanh")(hid)
         #28x28x1
+<<<<<<< HEAD
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
+=======
 >>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
 
         model =  Model([noise, con], out)
@@ -247,8 +262,13 @@ class CGAN():
         print('importing data...')
         #data = pkl.load( open( "C:\Outputs\slices2_32.pkl", "rb" ) )
 <<<<<<< HEAD
+<<<<<<< HEAD
         #data = pkl.load(open("/home/jz8415/slices2.pkl", "rb"))
         data = pkl.load(open(r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb"))
+=======
+        data = pkl.load(open("/home/hk2315/MSci2/faketest_images.pkl", "rb"))
+        #data = pkl.load(open(r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb"))
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
 =======
         data = pkl.load(open("/home/hk2315/MSci2/faketest_images.pkl", "rb"))
         #data = pkl.load(open(r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb"))
@@ -292,6 +312,7 @@ class CGAN():
         print('minmax scaling images...')
         print(self.imgs.shape)
 <<<<<<< HEAD
+<<<<<<< HEAD
         mmax = np.max(self.imgs)
         mmin = np.min(self.imgs)
         print('mmax', mmax)
@@ -300,6 +321,8 @@ class CGAN():
         self.imgs = (self.imgs.astype(np.float32) - (mmax+mmin)/2.) / ((mmax-mmin) / 2.)
         print(self.imgs[0][14])
 =======
+=======
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
         print('leeeeeeeength',len(self.imgs))
         for k in range(len(self.imgs)):
             mmax = np.max(self.imgs[k]) #shouldnt the scaling be done per image rather than looking at min/max out of all images???
@@ -309,6 +332,9 @@ class CGAN():
             #print(self.imgs[0][14])
             self.imgs[k] = (self.imgs[k].astype(np.float32) - (mmax+mmin)/2.) / ((mmax-mmin) / 2.)
         #print(self.imgs[0][14])
+<<<<<<< HEAD
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
+=======
 >>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
         print('expanding dimension of images...')
         self.imgs = np.expand_dims(self.imgs, axis=3)
@@ -328,7 +354,11 @@ class CGAN():
         for i in range(len(l)):
             for j in range(len(l[i])):
 <<<<<<< HEAD
+<<<<<<< HEAD
                 l[i][j] = (l[i][j].astype(np.float32) - (mal+mil)/2.) / ((mal-mil)/2.)
+=======
+                l[i][j] = (l[i][j].astype(np.float32) - (mal+mil)/2.) / ((mal-mil)/2.) #wouldnt j always be 0? (thats not a problem but just a question)
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
 =======
                 l[i][j] = (l[i][j].astype(np.float32) - (mal+mil)/2.) / ((mal-mil)/2.) #wouldnt j always be 0? (thats not a problem but just a question)
 >>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
@@ -350,7 +380,11 @@ class CGAN():
         print(self.labels.shape)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         '''
+=======
+        """
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
 =======
         """
 >>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
@@ -370,6 +404,7 @@ class CGAN():
         print(X_train.shape)
         print(y_train.shape)
 <<<<<<< HEAD
+<<<<<<< HEAD
         print(X_train[0])
         '''
         print('FINAL SHAPES')
@@ -377,12 +412,17 @@ class CGAN():
         print(self.labels.shape)
         print(self.imgs[0])
 =======
+=======
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
         #print(X_train[0])
         """
         print('FINAL SHAPES')
         print(self.imgs.shape)
         print(self.labels.shape)
         #print(self.imgs[0])
+<<<<<<< HEAD
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
+=======
 >>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
 
         # Adversarial ground truths
@@ -399,13 +439,19 @@ class CGAN():
 
             # Select a random half batch of images
 <<<<<<< HEAD
+<<<<<<< HEAD
             #idx = np.random.randint(0, X_train.shape[0], batch_size)
             #imgs, labels = X_train[idx], y_train[idx]
 =======
+=======
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
             """
             idx = np.random.randint(0, X_train.shape[0], batch_size)
             imgs, labels = X_train[idx], y_train[idx]
             """
+<<<<<<< HEAD
+>>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
+=======
 >>>>>>> 3d8fa3347ded29e88b3366626eb501487231feb8
             idx = np.random.randint(0, self.imgs.shape[0], batch_size)
             imgs, labels = self.imgs[idx], self.labels[idx]
