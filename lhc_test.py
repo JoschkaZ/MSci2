@@ -1,8 +1,8 @@
-import pyDOE
+###import pyDOE
 import matplotlib.pyplot as plt
 
 
-lh = pyDOE.lhs(2, samples=20, criterion='centermaximin')
+###lh = pyDOE.lhs(2, samples=20, criterion='centermaximin')
 #“center” or “c”: center the points within the sampling intervals
 #“maximin” or “m”: maximize the minimum distance between points, but place the point in a randomized location within its interval
 #“centermaximin” or “cm”: same as “maximin”, but centered within the intervals
@@ -11,6 +11,7 @@ lh = pyDOE.lhs(2, samples=20, criterion='centermaximin')
 
 
 #%
+"""
 x = []
 y = []
 for entry in lh:
@@ -20,7 +21,7 @@ for entry in lh:
 
 plt.scatter(x,y)
 plt.show()
-
+"""
 #%%
 import numpy as np
 import pickle as pkl
@@ -34,16 +35,23 @@ img2 = np.array([[0,0],[0,0]])
 
 #%%
 data = []
-for fake in range(1000):
+for fake in range(10000):
+    if fake%100 == 0:
+        print(fake)
     for z in range(7,12):
         img = []
+        angle = np.pi*np.random.uniform()
+        shift = np.pi*np.random.uniform()
         for y in range(28):
             row = []
             for x in range(28):
                 if (np.abs(x-14) < 9) and (np.abs(y-14) < 9):
-                    pixel = np.sin((x/63.*6.28*(z-6))) + np.random.uniform()
+                    r = np.cos(angle)*x + np.sin(angle)*y
+                    pixel = np.sin((r/63.*6.28*(z-6)) + shift ) + np.random.uniform()
+                    #pixel = np.sin((x/63.*6.28*(z-6))) + np.random.uniform()
                 else:
-                    pixel = np.sin((x/63.*6.28*(z-6))) + np.random.uniform()
+                    r = np.cos(angle)*x + np.sin(angle)*y
+                    pixel = np.sin((r/63.*6.28*(z-6)) + shift) + np.random.uniform()
                 row.append(pixel)
             img.append(row)
 
@@ -51,7 +59,9 @@ for fake in range(1000):
         if fake == 27:
             print(z)
             plt.imshow(img)
-            plt.show()
+            plt.savefig("images/fakeimg_%d.png" % z)
+            #plt.show()
+            plt.close()
 
 
         #if z == 7:
