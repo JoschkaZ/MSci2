@@ -28,7 +28,7 @@ class CGAN():
 
         optimizer = Adam(0.0002, 0.5)
 
-        ph_img = Input(shape=self.img_shape) # no , ?
+        ph_img = Input(shape=self.img_shape)
         ph_con = Input(shape=(self.con_dim,))
         self.discriminator = self.build_discriminator(ph_img,ph_con)
         self.discriminator.compile(loss=['binary_crossentropy'],optimizer=optimizer,metrics=['accuracy'])
@@ -50,105 +50,38 @@ class CGAN():
 
     def build_generator(self, noise, con):
 
-        #con2 = Dense(5, activation='tanh')(con)
-        #con2 = Dense(22, activation='tanh')(con2)
-        con1 = Dense(100, activation='tanh')(con)
-        # 100
-
         noise1 = noise
 
+        con1 = Dense(12, activation='tanh')(con)
+        con1 = Dense(25, activation='tanh')(con1)
+        con1 = Dense(50, activation='tanh')(con1)
+        con1 = Dense(100, activation='tanh')(con1)
+
         merged_input = Concatenate()([con1, noise1])
-        # 100+100
-        '''
-        #mnist version
-        hid = Dense(560)(merged_input)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #560
 
-        hid = Dense(128 * 7 * 7)(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #128*7*7
+        merged_input = Dense(200)(merged_input)
+        merged_input = Dense(200)(merged_input)
 
+        cfrom = 512
+        cto = 128
+        imfrom = 7
+        twopot = 2
 
-        hid = Reshape((7, 7, 128))(hid)
-        #7x7x128
-
-        hid = Conv2D(128, kernel_size=4, strides=1,padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #7x7x128
-
-        hid = Conv2DTranspose(128, 4, strides=2, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #14x14x128
-
-        hid = Conv2D(128, kernel_size=5, strides=1,padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #14x14x128
-
-        hid = Conv2DTranspose(128, 4, strides=2, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #28x28x128
-
-        hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #28x28x128
-
-        hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #28x28x128
-
-        hid = Conv2D(1, kernel_size=5, strides=1, padding="same")(hid)
-        out = Activation("tanh")(hid)
-        #28x28x1
-        '''
-
-        hid = Dense(128 * 7 * 7)(merged_input)
+        hid = Dense(cfrom * imfrom**2)(merged_input)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = ReLU()(hid)
-        #128*7*7
 
-        hid = Reshape((7, 7, 128))(hid)
-        #7x7x128
+        hid = Reshape((imfrom, imfrom, cfrom))(hid)
 
-        hid = Conv2D(128, kernel_size=5, strides=1,padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = ReLU()(hid)
-        #7x7x128
+        im = imfrom
+        for i in range(twopot-1):
 
-        hid = Conv2DTranspose(128, 5, strides=2, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = ReLU()(hid)
-        #14x14x128
+            hid = Conv2DTranspose(int(np.round((cto/cfrom)**((i+1)/(twopot-1))*cfrom)), 5, strides=2, padding='same')(hid)
+            hid = BatchNormalization(momentum=0.9)(hid)
+            hid = ReLU()(hid)
 
-        hid = Conv2D(128, kernel_size=5, strides=1,padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = ReLU()(hid)
-        #14x14x128
 
-        hid = Conv2DTranspose(128, 5, strides=2, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = ReLU()(hid)
-        #28x28x128
-
-        hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = ReLU()(hid)
-        #28x28x128
-
-        hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = ReLU()(hid)
-        #28x28x128
-
-        hid = Conv2D(1, kernel_size=5, strides=1, padding="same")(hid)
+        hid = Conv2DTranspose(1, kernel_size=5, strides=2, padding="same")(hid)
         out = Activation("tanh")(hid)
         #28x28x1
 
@@ -156,74 +89,55 @@ class CGAN():
         model.summary()
         return model
 
-
     def build_discriminator(self, img, con):
 
-        hid = Conv2D(128, kernel_size=3, strides=1, padding='same')(img)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #28x28x128
+        cfrom = 128
+        cto = 512
+        imfrom = 28
+        twopot = 2
 
-        hid = Conv2D(128, kernel_size=4, strides=1, padding='same')(hid)
+        hid = Conv2D(cfrom, kernel_size=5, strides=2, padding='same')(img)
         hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #28x28x128
+        hid = LeakyReLU(alpha=0.2)(hid)
 
-        hid = Conv2D(128, kernel_size=4, strides=2, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #14x14x128
+        for i in range(twopot-1):
 
-        hid = Conv2D(128, kernel_size=3, strides=1, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #14x14x128
-
-        hid = Conv2D(128, kernel_size=4, strides=2, padding='same')(hid)
-        hid = BatchNormalization(momentum=0.9)(hid)
-        hid = LeakyReLU(alpha=0.1)(hid)
-        #7x7x128
+            hid = Conv2D(int(np.round((cto/cfrom)**((i+1)/(twopot-1))*cfrom)), kernel_size=5, strides=2, padding='same')(hid)
+            hid = BatchNormalization(momentum=0.9)(hid)
+            hid = LeakyReLU(alpha=0.2)(hid)
+            #14x14x128
 
         hid = Flatten()(hid)
-        #7*7*128
-
-        hid = Dense(560, activation='tanh')(hid)
-        #640
 
         hid = Dense(100, activation='tanh')(hid)
-        #64
 
-        con1 = Dense(2)(con) #TODO same issue here....
-        con1 = Dense(4)(con1)
-        con1 = Dense(8)(con1)
-        con1 = Dense(16, activation='tanh')(con1)
-        con1 = Dense(32, activation='tanh')(con1)
-        con1 = Dense(64, activation='tanh')(con1)
+        con1 = Dense(12, activation='tanh')(con)
+        con1 = Dense(25, activation='tanh')(con1)
+        con1 = Dense(50, activation='tanh')(con1)
         con1 = Dense(100, activation='tanh')(con1)
-        #con1 = Dense(64, activation='tanh')(con1)
 
         merged_layer = Concatenate()([hid, con1])
-        #100+100
+        merged_layer = Dropout(0.1)(merged_layer)
 
-        hid = Dense(34, activation='tanh')(merged_layer)
-        #34
-        hid = Dense(6, activation='tanh')(hid)
-        #6
-        out = Dense(1, activation='sigmoid')(hid)
-        #1
+
+        merged_layer = Dense(100, activation='tanh')(merged_layer)
+        merged_layer = Dense(50, activation='tanh')(merged_layer)
+        merged_layer = Dense(25, activation='tanh')(merged_layer)
+
+        out = Dense(1, activation='sigmoid')(merged_layer)
 
         model = Model(inputs=[img, con], outputs=out)
-
         model.summary()
 
         return model
 
     def read_data(self):
 
+        '''
         print('importing data...')
         #data = pkl.load( open( "C:\Outputs\slices2_32.pkl", "rb" ) )
-        data = pkl.load(open("/home/hk2315/MSci2/faketest_images.pkl", "rb"))
-        #data = pkl.load(open(r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb"))
+        #data = pkl.load(open("/home/hk2315/MSci2/faketest_images.pkl", "rb"))
+        data = pkl.load(open(r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb"))
         print('data imported!')
 
         self.imgs = []
@@ -243,6 +157,25 @@ class CGAN():
         self.labels = np.array(self.labels)
         self.label_dim = len(self.labels[0])
         print('dimension of label: ', self.label_dim)
+        '''
+        # Load the dataset
+        (X_train, y_train), (_, _) = mnist.load_data()
+
+        print(X_train.shape)
+        print(y_train.shape)
+
+        # Configure input
+        X_train = (X_train.astype(np.float32) - 127.5) / 127.5
+        #X_train = np.expand_dims(X_train, axis=3)
+        y_train = y_train.reshape(-1, 1)
+        y_train = (y_train.astype(np.float32)-4.5) / 4.5
+        print(y_train)
+        print(len(y_train))
+
+
+        self.imgs = X_train
+        self.labels = y_train
+
 
         print('Shapes:')
         print(self.imgs.shape)
@@ -415,7 +348,7 @@ class CGAN():
         for i in range(r):
             for j in range(c):
                 axs[i,j].imshow(gen_imgs[cnt,:,:,0])
-                axs[i,j].set_title("Digit: %d" % sampled_labels[cnt])
+                axs[i,j].set_title("Digit: %f" % sampled_labels[cnt])
                 axs[i,j].axis('off')
                 cnt += 1
         fig.savefig("images/%d.png" % epoch)
@@ -424,4 +357,4 @@ class CGAN():
 
 if __name__ == '__main__':
     cgan = CGAN()
-    cgan.train(epochs=20000, batch_size=256, sample_interval=10, save_multiple = 10)
+    cgan.train(epochs=10000, batch_size=256, sample_interval=10, save_multiple = 10)

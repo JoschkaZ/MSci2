@@ -49,6 +49,7 @@ for fake in range(1000):
 
 
         if fake == 27:
+            print(z)
             plt.imshow(img)
             plt.show()
 
