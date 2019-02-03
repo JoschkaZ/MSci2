@@ -13,6 +13,9 @@ import copy
 import pickle as pkl
 from skimage.transform import resize
 
+#zeta parameter
+
+
 class CGAN():
     def __init__(self):
 
@@ -52,6 +55,10 @@ class CGAN():
 
     def build_generator(self, noise, con):
 
+        # 64 Mpc box isze is minimum tolerable. otherwise abprubt
+        # 128 should be fune. #
+        #ionisation boxes around 30 Mpc
+        # if go down to 64 should also reduce physical size of box. 128 should be fine#
         noise1 = noise
 
         con1 = Dense(12, activation='tanh')(con)
