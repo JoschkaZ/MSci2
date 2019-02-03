@@ -250,9 +250,9 @@ class CGAN():
         for epoch in range(epochs):
             print('EPOCH', epoch)
 
-            if epoch % 1000 == 0:
+            if epoch % 500 == 0:
                 print('aaaa')
-                idx = np.random.randint(0, self.imgs.shape[0], 100)
+                idx = np.random.randint(0, self.imgs.shape[0], 5000)
                 sub_imgs = copy.deepcopy(self.imgs[idx])
                 sub_labels = self.labels[idx]
 
@@ -270,11 +270,12 @@ class CGAN():
                 sub_imgs= np.array(new)
                 sub_imgs = np.expand_dims(sub_imgs, axis=3)
 
+                """
                 for j in range(0, len(sub_imgs), int(len(sub_imgs)/10)):
                     plt.imshow(sub_imgs[j][:,:,0])
                     print(sub_labels[j])
                     plt.show()
-
+                """
                 print('After selecting subset: ', sub_imgs.shape)
 
 
@@ -365,4 +366,4 @@ class CGAN():
 
 if __name__ == '__main__':
     cgan = CGAN()
-    cgan.train(epochs=10000, batch_size=2, sample_interval=10, save_multiple = 10)
+    cgan.train(epochs=40000, batch_size=64, sample_interval=10, save_multiple = 10)
