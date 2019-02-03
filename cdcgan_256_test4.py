@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import pickle as pkl
+from skimage.transform import resize
+
 
 class CGAN():
     def __init__(self):
@@ -300,6 +302,7 @@ class CGAN():
     def read_data(self):
 
         print('importing data...')
+        """
         #data = pkl.load( open( "C:\Outputs\slices2_32.pkl", "rb" ) )
         data = pkl.load(open("/home/jz8415/slices2.pkl", "rb"))
         #data = pkl.load(open(r"C:\\Users\\Joschka\\github\\MSci2\\faketest_images.pkl", "rb"))
@@ -322,6 +325,16 @@ class CGAN():
         self.labels = np.array(self.labels)
         self.label_dim = len(self.labels[0])
         print('dimension of label: ', self.label_dim)
+        """
+        (X_train, y_train), (_, _) = mnist.load_data()
+
+        print(X_train.shape)
+        print(y_train.shape)
+
+        y_train = y_train.reshape(-1, 1)
+
+        self.imgs = X_train.astype(np.float32)
+        self.labels = y_train.astype(np.float32)
 
         print('Shapes:')
         print(self.imgs.shape)
@@ -413,7 +426,33 @@ class CGAN():
         last_acc = .75
 
         for epoch in range(epochs):
+            if epoch % 500 == 0:
+                print('aaaa')
+                idx = np.random.randint(0, self.imgs.shape[0], 5000)
+                sub_imgs = copy.deepcopy(self.imgs[idx])
+                sub_labels = self.labels[idx]
 
+                new = []
+                print(sub_imgs.shape)
+                for i in range(len(sub_imgs)):
+                    s = copy.deepcopy(sub_imgs[i][:,:,0])
+                    #print(s.shape)
+                    #plt.imshow(s)
+                    #plt.show()
+                    s = resize(s, (256, 256))
+                    #plt.imshow(s)
+                    #plt.show()
+                    new.append(s)
+                sub_imgs= np.array(new)
+                sub_imgs = np.expand_dims(sub_imgs, axis=3)
+
+                """
+                for j in range(0, len(sub_imgs), int(len(sub_imgs)/10)):
+                    plt.imshow(sub_imgs[j][:,:,0])
+                    print(sub_labels[j])
+                    plt.show()
+                """
+                print('After selecting subset: ', sub_imgs.shape)
             # ---------------------
             #  Train Discriminator
             # ---------------------
@@ -423,8 +462,8 @@ class CGAN():
             idx = np.random.randint(0, X_train.shape[0], batch_size)
             imgs, labels = X_train[idx], y_train[idx]
             """
-            idx = np.random.randint(0, self.imgs.shape[0], batch_size)
-            imgs, labels = self.imgs[idx], self.labels[idx]
+            idx = np.random.randint(0, sub_imgs.shape[0], batch_size)
+            imgs, labels = sub_imgs[idx], sub_labels[idx]
 
             # Sample noise as generator input
             noise = np.random.normal(0, 1, (batch_size, 100))
