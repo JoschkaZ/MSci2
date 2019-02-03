@@ -11,6 +11,7 @@ import numpy as np
 import time
 import pickle as pkl
 from skimage.transform import resize
+import copy
 
 
 class CGAN():
@@ -55,11 +56,11 @@ class CGAN():
         #con2 = Dense(5, activation='tanh')(con)
         #con2 = Dense(22, activation='tanh')(con2)
         con1 = Dense(2, activation='tanh')(con) #TODO this is likely bad because it squases the ends too much
-        con1 = Dense(4, activation='tanh')(con1)
+        #con1 = Dense(4, activation='tanh')(con1)
         con1 = Dense(8, activation='tanh')(con1)
-        con1 = Dense(16, activation='tanh')(con1)
+        #con1 = Dense(16, activation='tanh')(con1)
         con1 = Dense(32, activation='tanh')(con1)
-        con1 = Dense(64, activation='tanh')(con1)
+        #con1 = Dense(64, activation='tanh')(con1)
         con1 = Dense(100, activation='tanh')(con1)
         #100
 
@@ -82,57 +83,57 @@ class CGAN():
 
         hid = Reshape((8, 8, 128))(hid)
         #8x8x128
-
+        """
         hid = Conv2D(128, kernel_size=4, strides=1,padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #8x8x128
-
+        """
         hid = Conv2DTranspose(128, 4, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #16x16x128
-
+        """
         hid = Conv2D(128, kernel_size=5, strides=1,padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #16x16x128
-
+        """
         hid = Conv2DTranspose(128, 4, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #32x32x128
-
+        """
         hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #32x32x128
-
+        """
         hid = Conv2DTranspose(128, 4, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #64x64x128
-
+        """
         hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #64x64x128
-
+        """
         hid = Conv2DTranspose(128, 4, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #128x128x128
-
+        """
         hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #128x128x128
-
+        """
         hid = Conv2DTranspose(128, 4, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #256x256x128
-
+        """
         hid = Conv2D(128, kernel_size=5, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
@@ -142,7 +143,7 @@ class CGAN():
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #256x256x128
-
+        """
         hid = Conv2D(1, kernel_size=5, strides=1, padding="same")(hid)
         out = Activation("tanh")(hid)
         #256x256x1
@@ -209,62 +210,62 @@ class CGAN():
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #256x256x128
-
+        """
         hid = Conv2D(128, kernel_size=4, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #256x256x128
-
+        """
         hid = Conv2D(128, kernel_size=4, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #128x128x128
-
+        """
         hid = Conv2D(128, kernel_size=3, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #128x128x128
-
+        """
         hid = Conv2D(128, kernel_size=4, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #64x64x128
-
+        """
         hid = Conv2D(128, kernel_size=3, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #64x64x128
-
+        """
         hid = Conv2D(128, kernel_size=4, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #32x32x128
-
+        """
         hid = Conv2D(128, kernel_size=3, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #32x32x128
-
+        """
         hid = Conv2D(128, kernel_size=4, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #16x16x128
-
+        """
         hid = Conv2D(128, kernel_size=3, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #16x16x128
-
+        """
         hid = Conv2D(128, kernel_size=4, strides=2, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #8x8x128
-
+        """
         hid = Conv2D(128, kernel_size=3, strides=1, padding='same')(hid)
         hid = BatchNormalization(momentum=0.9)(hid)
         hid = LeakyReLU(alpha=0.1)(hid)
         #8x8x128
-
+        """
         hid = Flatten()(hid)
         #7*7*128
 
@@ -275,11 +276,11 @@ class CGAN():
         #64
 
         con1 = Dense(2, activation='tanh')(con) #TODO same issue here....
-        con1 = Dense(4, activation='tanh')(con1)
+        #con1 = Dense(4, activation='tanh')(con1)
         con1 = Dense(8, activation='tanh')(con1)
-        con1 = Dense(16, activation='tanh')(con1)
+        #con1 = Dense(16, activation='tanh')(con1)
         con1 = Dense(32, activation='tanh')(con1)
-        con1 = Dense(64, activation='tanh')(con1)
+        #con1 = Dense(64, activation='tanh')(con1)
         con1 = Dense(100, activation='tanh')(con1)
         #con1 = Dense(64, activation='tanh')(con1)
 
@@ -540,4 +541,4 @@ class CGAN():
 
 if __name__ == '__main__':
     cgan = CGAN()
-    cgan.train(epochs=20000, batch_size=256, sample_interval=10, save_multiple = 10)
+    cgan.train(epochs=20000, batch_size=32, sample_interval=10, save_multiple = 10)
