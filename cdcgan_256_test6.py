@@ -15,6 +15,7 @@ from skimage.transform import resize
 import random
 import stats_utils
 import utils
+import sys
 
 #zeta parameter
 
@@ -300,7 +301,7 @@ class CGAN():
 
         for epoch in range(epochs):
             print('EPOCH', epoch)
-
+            """
             if epoch % 50 == 0: # TODO NEED TO CHANGE THIS
                 print('aaaa')
                 idx = np.random.randint(0, self.imgs.shape[0], 500)
@@ -321,14 +322,8 @@ class CGAN():
                 sub_imgs= np.array(new)
                 sub_imgs = np.expand_dims(sub_imgs, axis=3)
 
-                """
-                for j in range(0, len(sub_imgs), int(len(sub_imgs)/10)):
-                    plt.imshow(sub_imgs[j][:,:,0])
-                    print(sub_labels[j])
-                    plt.show()
-                """
                 print('After selecting subset: ', sub_imgs.shape)
-
+            """
             # NOTE GET NOISE LABEL VECTORS
             p_flip = 0.05
             noise_range = 0.1
@@ -344,8 +339,8 @@ class CGAN():
             idx = np.random.randint(0, X_train.shape[0], batch_size)
             imgs, labels = X_train[idx], y_train[idx]
             """
-            idx = np.random.randint(0, sub_imgs.shape[0], batch_size)
-            imgs, labels = sub_imgs[idx], sub_labels[idx]
+            idx = np.random.randint(0, self.imgs.shape[0], batch_size)
+            imgs, labels = self.imgs[idx], self.labels[idx]
 
             # Sample noise as generator input
             noise = np.random.normal(0, 1, (batch_size, 100))
@@ -393,7 +388,7 @@ class CGAN():
                 self.sample_images(epoch)
 
             if epoch % save_model_interval == 0:
-                print('saving model...'')
+                print('saving model...')
                 self.discriminator.save('models/21256discriminator_' + str(self.start_time) + '.h5')
                 self.discriminator.save_weights('models/21256discriminatorweights_' + str(self.start_time) + '.h5')
                 self.combined.save('models/21256combined_' + str(self.start_time) + '.h5')
@@ -401,9 +396,9 @@ class CGAN():
                 self.generator.save('models/21256generator_' + str(self.start_time) + '.h5')
                 self.discriminator.save_weights('models/21256generatorweights_' + str(self.start_time) + '.h5')
 
-            if epoch % stats_interval == 0:
-                print('calculating ps...')
-                self.calc_stats(epoch)
+            #if epoch % stats_interval == 0:
+                #print('calculating ps...')
+                #self.calc_ps(epoch)
 
 
     def calc_ps(self, epoch):
