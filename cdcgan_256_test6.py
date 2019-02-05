@@ -329,8 +329,10 @@ class CGAN():
             # NOTE GET NOISE LABEL VECTORS
             p_flip = 0.05
             noise_range = 0.1
-            valid_noisy  = [random.uniform(1.-noise_range,1.) if (random.uniform(0,1)<1.-p_flip) else random.uniform(0.,noise_range) for _ in range(batch_size)]
-            fake_noisy  = [random.uniform(0.,noise_range) if (random.uniform(0,1)<1.-p_flip) else random.uniform(1.-noise_range,1.) for _ in range(batch_size)]
+            valid_noisy  = np.array([random.uniform(1.-noise_range,1.) if (random.uniform(0,1)<1.-p_flip) else random.uniform(0.,noise_range) for _ in range(batch_size)])
+            fake_noisy  = np.array([random.uniform(0.,noise_range) if (random.uniform(0,1)<1.-p_flip) else random.uniform(1.-noise_range,1.) for _ in range(batch_size)])
+            #05022019 changed this to arrays
+
 
             # ---------------------
             #  Train Discriminator
