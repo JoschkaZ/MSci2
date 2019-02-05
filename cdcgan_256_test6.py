@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 from keras.datasets import mnist
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, Add, ReLU
-from keras.layers import BatchNormalization, Activation, Embedding, ZeroPadding2D, Conv2DTranspose
+from keras.layers import BatchNormalization, Activation, Embedding, ZeroPadding2D, Conv2DTranspose, Cropping2D
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Sequential, Model
@@ -11,7 +11,7 @@ import numpy as np
 import time
 import copy
 import pickle as pkl
-#from skimage.transform import resize
+from skimage.transform import resize
 import random
 import stats_utils
 import utils
@@ -116,7 +116,7 @@ class CGAN():
 
         cfrom = 512
         cto = 128
-        imfrom = 8
+        imfrom = 9
         twopot = 5
 
         hid = Dense(cfrom * imfrom**2)(merged_input)
@@ -134,8 +134,9 @@ class CGAN():
 
 
         hid = Conv2DTranspose(1, kernel_size=5, strides=2, padding="same")(hid)
-        out = Activation("tanh")(hid)
-        #28x28x1
+        hid = Activation("tanh")(hid)
+
+        out = Cropping2D(cropping=((16, 16), (16, 16)))(hid)
 
         model =  Model([noise, con], out)
         model.summary()
@@ -215,9 +216,7 @@ class CGAN():
         print(self.imgs[5])
         print(self.labels[5])
 
-
-
-        """
+        '''
         # Load the dataset
         (X_train, y_train), (_, _) = mnist.load_data()
 
@@ -228,14 +227,14 @@ class CGAN():
 
         self.imgs = X_train.astype(np.float32)
         self.labels = y_train.astype(np.float32)
-
+        '''
 
         print('Shapes:')
         print(self.imgs.shape)
         print(self.labels.shape)
         #(60000, 28, 28)
         #(60000,1) #after reshaping
-        """
+
 
         self.real_imgs_index = {}
         for i, z in enumerate(self.labels):
@@ -303,7 +302,8 @@ class CGAN():
 
         for epoch in range(epochs):
             print('EPOCH', epoch)
-            """
+
+            '''
             if epoch % 50 == 0: # TODO NEED TO CHANGE THIS
                 print('aaaa')
                 idx = np.random.randint(0, self.imgs.shape[0], 500)
@@ -325,7 +325,9 @@ class CGAN():
                 sub_imgs = np.expand_dims(sub_imgs, axis=3)
 
                 print('After selecting subset: ', sub_imgs.shape)
-            """
+
+            '''
+
             # NOTE GET NOISE LABEL VECTORS
             p_flip = 0.05
             noise_range = 0.1
@@ -343,6 +345,8 @@ class CGAN():
             idx = np.random.randint(0, X_train.shape[0], batch_size)
             imgs, labels = X_train[idx], y_train[idx]
             """
+            #idx = np.random.randint(0, sub_imgs.shape[0], batch_size)
+            #imgs, labels = sub_imgs[idx], sub_labels[idx]
             idx = np.random.randint(0, self.imgs.shape[0], batch_size)
             imgs, labels = self.imgs[idx], self.labels[idx]
 
@@ -356,17 +360,10 @@ class CGAN():
             gen_imgs = self.generator.predict([noise, labels])
 
             # Train the discriminator
-            print('going into discr:')
-            print(imgs.shape)
-            print(gen_imgs.shape)
-            print(labels.shape)
-            print(valid_noisy.shape)
-            print(fake_noisy.shape)
-            print(imgs)
-            print(gen_imgs)
-            print(labels)
-            print(valid_noisy)
-            print(fake_noisy)
+
+
+            imgs = imgs + np.random.normal(0, 0.05, shape=imgs.shape)
+            gen_imgs = gen_imgs + np.random.normal(0, 0.05, shape=imgs.shape)
 
             if (epoch < 200) and (epoch%5!=0): # only slowed down at the start. 1:1 training later
                 print('Only testing discriminator')
@@ -387,13 +384,7 @@ class CGAN():
             sampled_labels = (sampled_labels.astype(np.float32)-4.5) / 4.5
 
             # Train the generator
-            print('going into gen:')
-            print(noise.shape)
-            print(sampled_labels.shape)
-            print(valid.shape)
-            print(noise)
-            print(sampled_labels)
-            print(valid)
+
             if last_acc < 0.7 and 1==2:
                 print('Only testing generator')
                 g_loss = self.combined.test_on_batch([noise, sampled_labels], valid)
@@ -526,11 +517,11 @@ if __name__ == '__main__':
     if args[1] == 'new':
         cgan = CGAN(use_old_model=False)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=64, sample_interval=10, save_model_interval = 10, stats_interval = 10)
+        cgan.train(epochs=400000, batch_size=4, sample_interval=10, save_model_interval = 10, stats_interval = 10)
     elif args[1] == 'continue':
         cgan = CGAN(use_old_model=True)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=64, sample_interval=10, save_model_interval = 10, stats_interval = 10)
+        cgan.train(epochs=400000, batch_size=4, sample_interval=10, save_model_interval = 10, stats_interval = 10)
     else:
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
