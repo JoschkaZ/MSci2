@@ -11,7 +11,7 @@ import numpy as np
 import time
 import copy
 import pickle as pkl
-from skimage.transform import resize
+#from skimage.transform import resize
 import random
 import stats_utils
 import utils
