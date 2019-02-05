@@ -212,6 +212,8 @@ class CGAN():
         self.labels = np.array(self.labels)
         self.label_dim = len(self.labels[0])
         print('dimension of label: ', self.label_dim)
+        print(self.imgs[5])
+        print(self.labels[5])
 
 
 
@@ -352,6 +354,18 @@ class CGAN():
             gen_imgs = self.generator.predict([noise, labels])
 
             # Train the discriminator
+            print('going into discr:')
+            print(imgs.shape)
+            print(gen_imgs.shape)
+            print(labels.shape)
+            print(valid_noisy.shape)
+            print(fake_noisy.shape)
+            print(imgs)
+            print(gen_imgs)
+            print(labels)
+            print(valid_noisy)
+            print(fake_noisy)
+
             if (epoch < 200) and (epoch%5!=0): # only slowed down at the start. 1:1 training later
                 print('Only testing discriminator')
                 d_loss_real = self.discriminator.test_on_batch([imgs, labels], valid_noisy)
@@ -371,6 +385,13 @@ class CGAN():
             sampled_labels = (sampled_labels.astype(np.float32)-4.5) / 4.5
 
             # Train the generator
+            print('going into gen:')
+            print(noise.shape)
+            print(sampled_labels.shape)
+            print(valid.shape)
+            print(noise)
+            print(sampled_labels)
+            print(valid)
             if last_acc < 0.7 and 1==2:
                 print('Only testing generator')
                 g_loss = self.combined.test_on_batch([noise, sampled_labels], valid)
