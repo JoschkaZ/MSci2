@@ -28,7 +28,7 @@ for entry in original:
             print('n', img.shape)
 
 
-        new_data.append([img, int(l_z)])
+        new_data.append([img, entry[1]])
 
 
 pkl.dump(new_data, open("/home/jz8415/slices2_128.pkl", 'wb'))
