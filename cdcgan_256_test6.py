@@ -362,8 +362,8 @@ class CGAN():
             # Train the discriminator
 
 
-            imgs = imgs + np.random.normal(0, 0.05, shape=imgs.shape)
-            gen_imgs = gen_imgs + np.random.normal(0, 0.05, shape=imgs.shape)
+            imgs = imgs + np.random.normal(0, 0.05, size=imgs.shape)
+            gen_imgs = gen_imgs + np.random.normal(0, 0.05, size=imgs.shape)
 
             if (epoch < 200) and (epoch%5!=0): # only slowed down at the start. 1:1 training later
                 print('Only testing discriminator')
@@ -500,7 +500,7 @@ class CGAN():
                         #print(temp_copy[i][0])
                         #print(self.real_imgs_index.keys())
                         if temp_copy[i][0] in self.real_imgs_index: #real images for that z are available
-                            sample_i = random.randint(0,len(self.real_imgs_index[temp_copy[i][0]]))
+                            sample_i = random.randint(0,len(self.real_imgs_index[temp_copy[i][0]])-1)
                             #print(self.real_imgs_index[temp_copy[i][0]])
                             sample_i = self.real_imgs_index[temp_copy[i][0]][sample_i]
                             #print(sample_i)
@@ -517,11 +517,11 @@ if __name__ == '__main__':
     if args[1] == 'new':
         cgan = CGAN(use_old_model=False)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=4, sample_interval=10, save_model_interval = 10, stats_interval = 10)
+        cgan.train(epochs=400000, batch_size=64, sample_interval=10, save_model_interval = 10, stats_interval = 10)
     elif args[1] == 'continue':
         cgan = CGAN(use_old_model=True)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=4, sample_interval=10, save_model_interval = 10, stats_interval = 10)
+        cgan.train(epochs=400000, batch_size=64, sample_interval=10, save_model_interval = 10, stats_interval = 10)
     else:
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
