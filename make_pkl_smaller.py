@@ -13,11 +13,11 @@ want = int(70000 * 0.25 / 5)
 new_data = []
 for entry in original:
     img = np.array(entry[0])
-    label = int(entry[1])
+    l_z = float(entry[1].split('_z')[1].split('_')[0])
 
-    if counts[label-7] < want:
+    if counts[int(l_z)-7] < want:
 
-        counts[label-7] += 1
+        counts[int(l_z)-7] += 1
 
         r = (random.random() < 0.0001)
         if r:
@@ -28,7 +28,7 @@ for entry in original:
             print('n', img.shape)
 
 
-        new_data.append([img, int(label)])
+        new_data.append([img, int(l_z)])
 
 
 pkl.dump(new_data, open("/home/jz8415/slices2_128.pkl"), 'wb')
