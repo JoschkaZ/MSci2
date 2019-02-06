@@ -1,18 +1,18 @@
 
 import pickle as pkl
 import random
-
+import numpy as np
 
 original = pkl.load(open("/home/jz8415/slices2.pkl", 'rb'))
 
-print(original.shape)
+
 
 counts = [0,0,0,0,0]
 want = int(70000 * 0.25 / 5)
 
 new_data = []
 for entry in original:
-    img = entry[0]
+    img = np.array(entry[0])
     label = int(entry[1])
 
     if counts[label-7] < want:
@@ -30,5 +30,5 @@ for entry in original:
 
         new_data.append([img, int(label)])
 
-print(new_data.shape)
+
 pkl.dump(new_data, open("/home/jz8415/slices2_128.pkl"), 'wb')
