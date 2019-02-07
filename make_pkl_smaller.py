@@ -8,7 +8,7 @@ original = pkl.load(open("/home/jz8415/slices2.pkl", 'rb'))
 
 
 counts = [0,0,0,0,0]
-want = int(70000 * 0.25 / 5)
+want = int(70000 * 0.999 / 5)
 
 new_data = []
 for entry in original:
@@ -31,4 +31,4 @@ for entry in original:
         new_data.append([img, entry[1]])
 
 
-pkl.dump(new_data, open("/home/jz8415/slices2_128.pkl", 'wb'))
+pkl.dump(new_data, open("/home/jz8415/slices2_128_all.pkl", 'wb'))
