@@ -8,7 +8,7 @@ original = pkl.load(open("/home/jz8415/slices2.pkl", 'rb'))
 
 
 counts = [0,0,0,0,0]
-want = int(70000 * 0.999 / 5)
+want = int(70000 * 100 / 5)
 
 new_data = []
 for entry in original:
