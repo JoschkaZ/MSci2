@@ -359,16 +359,27 @@ class CGAN():
 
             gen_imgs = self.generator.predict([noise, labels])
 
+
+            # NOTE GET NOISE LABEL VECTORS
+            p_flip = 0.05
+            noise_range = 0.1
+            valid_noisy  = np.array([random.uniform(1.-noise_range,1.) if (random.uniform(0,1)<1.-p_flip) else random.uniform(0.,noise_range) for _ in range(batch_size)])
+            fake_noisy  = np.array([random.uniform(0.,noise_range) if (random.uniform(0,1)<1.-p_flip) else random.uniform(1.-noise_range,1.) for _ in range(batch_size)])
+
+            imgs = imgs + np.random.normal(0, 0.01, size=imgs.shape)
+            gen_imgs = gen_imgs + np.random.normal(0, 0.01, size=imgs.shape)
+
+
             #Train the discriminator
             #if last_acc > 0.8:
             if (epoch < 200) and (epoch%5!=0):
                 print('Only testing discriminator')
-                d_loss_real = self.discriminator.test_on_batch([imgs, labels], valid)
-                d_loss_fake = self.discriminator.test_on_batch([gen_imgs, labels], fake)
+                d_loss_real = self.discriminator.test_on_batch([imgs, labels], valid_noisy)
+                d_loss_fake = self.discriminator.test_on_batch([gen_imgs, labels], fake_noisy)
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
             else:
-                d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid)
-                d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake)
+                d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid_noisy)
+                d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake_noisy)
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
 
@@ -480,6 +491,7 @@ class CGAN():
                 axs[cnt].legend()
                 cnt += 1
             fig.savefig("images/peak_brightness_%d.png" % epoch)
+            plt.close()
 
     def sample_images(self, epoch):
 
