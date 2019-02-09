@@ -52,10 +52,6 @@ class CGAN():
 
         #con2 = Dense(5, activation='tanh')(con)
         #con2 = Dense(22, activation='tanh')(con2)
-<<<<<<< HEAD
-        con1 = Dense(100, activation='tanh')(con)
-        # 100
-=======
         con1 = Dense(2, activation='tanh')(con) #TODO this is likely bad because it squases the ends too much
         con1 = Dense(4, activation='tanh')(con1)
         con1 = Dense(8, activation='tanh')(con1)
@@ -64,18 +60,12 @@ class CGAN():
         con1 = Dense(64, activation='tanh')(con1)
         con1 = Dense(100, activation='tanh')(con1)
         #100
->>>>>>> 0b8081bb7753b1d77f16fc04e89b8be1d000e946
 
         noise1 = noise
 
         merged_input = Concatenate()([con1, noise1])
-<<<<<<< HEAD
-        # 100+100
-        '''
-=======
         #100+100
 
->>>>>>> 0b8081bb7753b1d77f16fc04e89b8be1d000e946
         #mnist version
         hid = Dense(560)(merged_input)
         hid = BatchNormalization(momentum=0.9)(hid)
@@ -167,10 +157,7 @@ class CGAN():
         hid = Conv2D(1, kernel_size=5, strides=1, padding="same")(hid)
         out = Activation("tanh")(hid)
         #28x28x1
-<<<<<<< HEAD
-=======
         '''
->>>>>>> 0b8081bb7753b1d77f16fc04e89b8be1d000e946
 
         model =  Model([noise, con], out)
         model.summary()
@@ -282,21 +269,13 @@ class CGAN():
     def min_max_scale_images(self):
         print('minmax scaling images...')
         print(self.imgs.shape)
-<<<<<<< HEAD
-        mmax = np.max(self.imgs)
-=======
         mmax = np.max(self.imgs) #shouldnt the scaling be done per image rather than looking at min/max out of all images???
->>>>>>> 0b8081bb7753b1d77f16fc04e89b8be1d000e946
         mmin = np.min(self.imgs)
         #print('mmax', mmax)
         #print('mmin', mmin)
         #print(self.imgs[0][14])
         self.imgs = (self.imgs.astype(np.float32) - (mmax+mmin)/2.) / ((mmax-mmin) / 2.)
-<<<<<<< HEAD
-        print(self.imgs[0][14])
-=======
         #print(self.imgs[0][14])
->>>>>>> 0b8081bb7753b1d77f16fc04e89b8be1d000e946
         print('expanding dimension of images...')
         self.imgs = np.expand_dims(self.imgs, axis=3)
 
@@ -314,13 +293,7 @@ class CGAN():
 
         for i in range(len(l)):
             for j in range(len(l[i])):
-<<<<<<< HEAD
-
                 l[i][j] = (l[i][j].astype(np.float32) - (mal+mil)/2.) / ((mal-mil)/2.) #wouldnt j always be 0? (thats not a problem but just a question)
-                # for now its always 0, but if there are multiple labels later on they will need to be scaled separately
-=======
-                l[i][j] = (l[i][j].astype(np.float32) - (mal+mil)/2.) / ((mal-mil)/2.) #wouldnt j always be 0? (thats not a problem but just a question)
->>>>>>> 0b8081bb7753b1d77f16fc04e89b8be1d000e946
 
         if verbose == 0:
             print('scaled labels')

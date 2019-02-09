@@ -257,9 +257,9 @@ class CGAN():
         for epoch in range(epochs):
             print('EPOCH', epoch)
 
-            if epoch % 500 == 0:
+            if epoch % 50 == 0:
                 print('aaaa')
-                idx = np.random.randint(0, self.imgs.shape[0], 5000)
+                idx = np.random.randint(0, self.imgs.shape[0], 500)
                 sub_imgs = copy.deepcopy(self.imgs[idx])
                 sub_labels = self.labels[idx]
 
@@ -308,7 +308,7 @@ class CGAN():
             gen_imgs = self.generator.predict([noise, labels])
 
             # Train the discriminator
-            if last_acc > 0.8:
+            if (epoch < 200) and (epoch%5!=0):
                 print('Only testing discriminator')
                 d_loss_real = self.discriminator.test_on_batch([imgs, labels], valid)
                 d_loss_fake = self.discriminator.test_on_batch([gen_imgs, labels], fake)
@@ -332,6 +332,7 @@ class CGAN():
                 g_loss = self.combined.test_on_batch([noise, sampled_labels], valid)
             else:
                 g_loss = self.combined.train_on_batch([noise, sampled_labels], valid)
+                # TODO try testing right afterwards and check if the losses actuallry agree   . . . .
 
 
             # Plot the progress
@@ -373,4 +374,4 @@ class CGAN():
 
 if __name__ == '__main__':
     cgan = CGAN()
-    cgan.train(epochs=40000, batch_size=64, sample_interval=10, save_multiple = 10)
+    cgan.train(epochs=40000, batch_size=4, sample_interval=10, save_multiple = 10)
