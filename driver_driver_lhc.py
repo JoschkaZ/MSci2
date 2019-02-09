@@ -1,9 +1,9 @@
 # IMPORTS
 import importlib
 import numpy as np
-import utils
+#import utils
 import datetime
-importlib.reload(utils)
+#importlib.reload(utils)
 import time
 import pyDOE
 
@@ -14,8 +14,11 @@ lhc_space = [
 ['test2', 1, 5, 'log']
 #can add more parameters here...
 ]
-n_samples = 3
+n_samples = 10
 z_range = [11, 7, -1]
+
+# TODO generate images at multiple redshifts together for physical parameters
+# TODO implement periodicity
 
 
 # get lh coordinates

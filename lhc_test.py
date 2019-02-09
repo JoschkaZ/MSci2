@@ -35,16 +35,16 @@ img2 = np.array([[0,0],[0,0]])
 
 #%%
 data = []
-for fake in range(10000):
-    if fake%100 == 0:
+for fake in range(100):
+    if fake%1 == 0:
         print(fake)
     for z in range(7,12):
         img = []
         angle = np.pi*np.random.uniform()
         shift = np.pi*np.random.uniform()
-        for y in range(28):
+        for y in range(256): # image size
             row = []
-            for x in range(28):
+            for x in range(256): # image size
                 if (np.abs(x-14) < 9) and (np.abs(y-14) < 9):
                     r = np.cos(angle)*x + np.sin(angle)*y
                     pixel = np.sin((r/63.*6.28*(z-6)) + shift ) + np.random.uniform()
@@ -56,10 +56,10 @@ for fake in range(10000):
             img.append(row)
 
 
-        if fake == 27:
+        if fake == 0:
             plt.imshow(img)
-            plt.savefig("images/fakeimg_%d.png" % z)
-            #plt.show()
+            #plt.savefig("images/fakeimg_%d.png" % z)
+            plt.show()
             plt.close()
 
 
@@ -72,5 +72,12 @@ for fake in range(10000):
         data.append([img, 'something_z'+str(z) + '_something'])
 
 
-pkl.dump(data, open("faketest_images.pkl", "wb"))
+pkl.dump(data, open("faketest_images_256.pkl", "wb")) # image size
 print('duneÄ)')
+
+
+#%%
+import random
+#x = [r = 5, (random.uniform(0,1) < 0.5)*random.uniform(0.9, 1.) for _ in range(10)]
+x = [random.uniform(0.9,1.) if (random.uniform(0,1)<0.95) else random.uniform(0.,0.1) for _ in range(1, 100) ]
+print(x)

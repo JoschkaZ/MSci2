@@ -47,13 +47,19 @@ for SEED in seeds:
     # box name is: parameter_string + '_' + old_boxname
     utils.cd_to_boxes()
     box_names = utils.get_delta_T_boxes()
+    box_names_density = utils.get_deltax_boxes()
+
     param_string = 'SEED'+str(SEED)+'_ZSTART'+str(ZSTART)+'_ZEND'+str(ZEND)+'_ZSTEP'+str(ZSTEP)+'_ZETA_X'+str(ZETA_X)
     box_names = utils.rename_boxes(box_names, param_string)
+    box_names_density = utils.rename_boxes(box_names_density, param_string)
 
     #name archive
     # archive name is: data + '_' + parameter_string
     archive_name = str(datetime.datetime.now()).replace(' ','_').replace(':','#').replace('.','#')+'_'+param_string
     utils.zip_boxes(box_names, archive_name)
+
+    archive_name_density = 'density_'+str(datetime.datetime.now()).replace(' ','_').replace(':','#').replace('.','#')+'_'+param_string
+    utils.zip_boxes(box_names_density, archive_name_density)
 
     print('ITERATION FINISHED')
     print('T = ', time.time() - start_time, 's')
