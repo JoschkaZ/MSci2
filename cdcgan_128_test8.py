@@ -439,6 +439,7 @@ class CGAN():
                 self.generator.save('models/21256generator_' + str(self.start_time) + '.h5')
                 self.discriminator.save_weights('models/21256generatorweights_' + str(self.start_time) + '.h5')
 
+
     def calc_ps(self, epoch):
         if self.find_ps == True:
             self.real_imgs_dict_ps = {}
@@ -471,6 +472,7 @@ class CGAN():
                 plt.legend()
                 plt.savefig("images/ps_%d.png" % epoch)
             plt.close()
+
 
     def calc_peak_count_brightness(self, epoch):
         z_list_pk = range(7,12)
@@ -510,6 +512,8 @@ class CGAN():
                 axs[cnt].legend()
                 cnt += 1
             fig.savefig("images/peak_brightness_%d.png" % epoch)
+            plt.close()
+
 
     def sample_images(self, epoch):
 
