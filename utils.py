@@ -238,6 +238,19 @@ def get_delta_T_boxes(verbose=1, mypath=''):
 
     return temp
 
+def get_deltax_boxes(verbose=1, mypath=''):
+    if verbose == 1: print('getting delta_t box names')
+    if mypath == '':
+        user = get_user()
+        mypath = r'/home/' + user + r'/21cmFAST-master/Boxes'
+    boxfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+    temp = []
+    for boxfile in boxfiles:
+        if 'updated_smoothed_deltax_' in boxfile:
+            temp.append(boxfile)
+    return temp
+
+
 def rename_boxes(box_names, param_string, verbose=1):
     if verbose==1: print('renaming boxes')
     user = get_user()

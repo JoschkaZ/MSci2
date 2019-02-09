@@ -150,3 +150,29 @@ for i in range(9):
         axs[i,j].axis('off')
 
 plt.show()
+
+
+#%%
+import numpy as np
+x = np.random.normal(0, 0.05, size=(4,4,4))
+y = np.random.normal(0, 0.05, size=(4,4,4))
+print(x)
+print(y)
+print(x+y)
+
+
+
+#%%
+import matplotlib.pyplot as plt
+
+
+f = plt.figure(1)
+f.plot([1,2,3])
+
+g = plt.figure(2)
+g.plot([3,2,1])
+g.show()
+
+
+f.plot([2,3,4])
+f.show()
