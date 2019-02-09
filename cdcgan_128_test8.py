@@ -162,8 +162,6 @@ class CGAN():
             self.combined = load_model(mypath +'/21256combined_' + str(time_to_load) + '.h5')
     '''
 
-
-
     def read_data(self):
 
         print('importing data...')
