@@ -87,7 +87,8 @@ def crossraPsd2d(img1,img2,show=False):
 
 def raPsd2d(img, res, show=False):
     # get averaged power spectral density of image with resolution res
-
+    img_width = img.shape[0]
+    #print('img width',int(img_width/2))
 
     #compute power spectrum
     imgf = np.fft.fft2(img)
@@ -95,24 +96,24 @@ def raPsd2d(img, res, show=False):
     imgfsp = (np.abs(imgfs)) **2.
     #print(np.shape(imgfsp))
 
-    S = np.zeros(128)
-    C = np.zeros(128)
+    S = np.zeros(int(img_width/2))
+    C = np.zeros(int(img_width/2))
     k_list = []
-    for i in range(256):
-        for j in range(256):
+    for i in range(int(img_width)):
+        for j in range(int(img_width)):
 
-            i2 = i - (256.-1)/2.
-            j2 = j - (256.-1)/2.
+            i2 = i - (float(img_width)-1)/2.
+            j2 = j - (float(img_width)-1)/2.
 
             r = int(np.round(np.sqrt(i2**2+j2**2)))
 
 
-            if r <= 127:
+            if r <= (int(img_width/2)-1):
                 S[r] += imgfsp[i][j]
                 C[r] += 1
-
-    for i in range(128):
-        k = i*(1.*2*np.pi/300)
+    physical_width = (img_width/256)*300
+    for i in range(int(img_width/2)):
+        k = i*(1.*2*np.pi/physical_width)
         if C[i] == 0:
             S[i] = 0
         else:
@@ -139,16 +140,19 @@ def raPsd2d(img, res, show=False):
 
 
 def produce_average_ps(slices):
-    PS = np.zeros(127) #the first value of the PS is always zero so ignore that
+    img_width = slices.shape[1]
+    #print('width',img_width)
+    PS = np.zeros(int(img_width/2)-1) #the first value of the PS is always zero so ignore that
     N = len(slices)
-    values_list = [ [] for i in range(127) ] #list of 127 empty lists
+    #print('len',N)
+    values_list = [ [] for i in range(int(img_width/2)-1) ] #list of 127 empty lists
     std_list = []
     S0 = []
     S1 = []
 
     for i in range(N):
         slc = slices[i]
-        S,k_list = raPsd2d(slc,(256,256))
+        S,k_list = raPsd2d(slc,(int(img_width),int(img_width)))
         S = S[1:] #ignore the first element in PS becuase its always zero
         #k_list = k_list[1:]
         #S0.append(S[0])
@@ -208,11 +212,16 @@ def get_pk_hist(slices):
 
 
 def get_peak_vs_brightness(slices):
+    #print('slices shape',slices.shape)
     N = len(slices)
+    #print('N',N)
     brightness_list = []
 
     for i in range(N):
         slc = slices[i]
+        #print('middle',slc[1,1])
+        #print('middle',slc[1,1][0])
+        #print('slc shape',slc.shape)
         for j in range(2,np.shape(slc)[0]-2): #dont consider edge rows
             for k in range(2,np.shape(slc)[1]-2): #dont consider edge columns
                 middle = slc[j,k] #middle cell that we are considering
@@ -233,6 +242,7 @@ def get_peak_vs_brightness(slices):
 
 
 def get_pixel_val(slices):
+    print(slices.shape)
     N = len(slices)
     elem = [] #list of elements to use for histogram
 

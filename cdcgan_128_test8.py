@@ -37,6 +37,7 @@ class CGAN():
         ph_label = Input(shape=(self.label_dim,))
 
         self.find_ps = True
+        self.find_peak_brightness = True
 
         self.discriminator = self.build_discriminator(ph_img, ph_label)
         self.discriminator.compile(loss=['binary_crossentropy'],optimizer=optimizer,metrics=['accuracy'])
@@ -161,6 +162,8 @@ class CGAN():
             print('Reading combined from: ', mypath +'/21256combined_' + str(time_to_load) + '.h5')
             self.combined = load_model(mypath +'/21256combined_' + str(time_to_load) + '.h5')
     '''
+
+
 
     def read_data(self):
 
@@ -417,6 +420,12 @@ class CGAN():
             print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100.*d_loss[1], g_loss))
             last_acc = d_loss[1]
 
+            if epoch % 10 == 0:
+                #print('calculating ps...')
+                #self.calc_ps(epoch)
+                print('calculating brihgtness peak count...')
+                self.calc_peak_count_brightness(epoch)
+
             # If at save interval => save generated image samples
             if epoch % sample_interval == 0:
                 self.sample_images(epoch)
@@ -430,13 +439,10 @@ class CGAN():
                 self.generator.save('models/21256generator_' + str(self.start_time) + '.h5')
                 self.discriminator.save_weights('models/21256generatorweights_' + str(self.start_time) + '.h5')
 
-                #if epoch % 2000 == 0:
-                #print('calculating stats...')
-                #self.calc_ps(epoch)
 
     def calc_ps(self, epoch):
         if self.find_ps == True:
-            self.real_imgs_dict = {}
+            self.real_imgs_dict_ps = {}
             for i in self.real_imgs_index:
                 intv = int(len(self.real_imgs_index[i])/99)
                 index_list = self.real_imgs_index[i][::intv]
@@ -445,7 +451,7 @@ class CGAN():
                 #print(real_imgs)
                 #print(np.shape(real_imgs))
                 real_ave_ps,real_ps_std,k_list_real = stats_utils.produce_average_ps(real_imgs)
-                self.real_imgs_dict[i] = [real_ave_ps[1:],k_list_real[1:]]
+                self.real_imgs_dict_ps[i] = [real_ave_ps[1:],k_list_real[1:]]
             self.find_ps = False
 
         else:
@@ -461,16 +467,51 @@ class CGAN():
                 fake_ave_ps,fake_ps_std,k_list_fake = stats_utils.produce_average_ps(gen_imgs)
                 plt.errorbar(x=k_list_fake[1:], y=fake_ave_ps[1:], yerr=fake_ps_std[1:], alpha=0.5, label="fake z="+str(z))
                 plt.yscale('log')
-                plt.plot(self.real_imgs_dict[z][1],self.real_imgs_dict[z][0], label="real z="+str(z))
+                plt.plot(self.real_imgs_dict_ps[z][1],self.real_imgs_dict_ps[z][0], label="real z="+str(z))
                 plt.yscale('log')
                 plt.legend()
-            if platform == 'linux':
-                user = utils.get_user()
-                print(user)
-                plt.savefig(r"/home/" + user + r"/MSci2/images/ps_%d.png" % epoch)
-            else: #windows
                 plt.savefig("images/ps_%d.png" % epoch)
             plt.close()
+
+
+    def calc_peak_count_brightness(self, epoch):
+        z_list_pk = range(7,12)
+        if self.find_peak_brightness == True:
+            self.real_imgs_dict_pk = {}
+            for i in self.real_imgs_index:
+                intv = int(len(self.real_imgs_index[i])/10)
+                index_list = self.real_imgs_index[i][::intv]
+                real_imgs = self.imgs[index_list]
+                #real_imgs = np.squeeze(real_imgs)
+                rl_brightness_list = stats_utils.get_peak_vs_brightness(real_imgs)
+                self.real_imgs_dict_pk[i] = [rl_brightness_list]
+            self.find_peak_brightness = False
+
+        else:
+            noise = np.random.normal(0, 1, (10, 100))
+
+            mal = max(self.real_imgs_index.keys())
+            mil = min(self.real_imgs_index.keys())
+            self.fake_imgs_dict_pk = {}
+            for z in self.real_imgs_index:
+                z_vec = np.array([[z]]*100)
+                z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
+                gen_imgs = self.generator.predict([noise, np.reshape(z_vec,(100,1))])
+                #gen_imgs = np.squeeze(gen_imgs)
+                fk_brightness_list = stats_utils.get_peak_vs_brightness(gen_imgs)
+                self.fake_imgs_dict_pk[z] = [fk_brightness_list]
+
+            r = 5
+            c = 1
+            fig, axs = plt.subplots(r, c, figsize=(4,18), dpi=250)
+            cnt = 0
+            for z in z_list_pk:
+                axs[cnt].hist(self.real_imgs_dict_pk[z], bins=100, color="blue", label="real", alpha=0.7)
+                axs[cnt].hist(self.fake_imgs_dict_pk[z], bins=100, color="orange", label="fake", alpha=0.7)
+                axs[cnt].set_title("Labels: %d" % z)
+                axs[cnt].legend()
+                cnt += 1
+            fig.savefig("images/peak_brightness_%d.png" % epoch)
 
 
     def sample_images(self, epoch):
@@ -545,8 +586,8 @@ class CGAN():
                         if temp_copy[i][0] in self.real_imgs_index: #real images for that z are available
                             fake_pix_val = stats_utils.get_pixel_val(gen_imgs[[cnt-1],:,:,:])
                             real_pix_val = stats_utils.get_pixel_val(self.imgs[[sample_i],:,:,:])
-                            axs[i,j].hist(real_pix_val, bins=100, color="blue", label="real", alpha=0.7)
-                            axs[i,j].hist(fake_pix_val, bins=100, color="orange", label="fake", alpha=0.7)
+                            axs[i,j].hist(real_pix_val, range=(-1,1), bins=100, color="blue", label="real", alpha=0.7)
+                            axs[i,j].hist(fake_pix_val, range=(-1,1), bins=100, color="orange", label="fake", alpha=0.7)
                             axs[i,j].legend()
 
         if platform == 'linux':
