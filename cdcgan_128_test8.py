@@ -420,9 +420,9 @@ class CGAN():
             print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100.*d_loss[1], g_loss))
             last_acc = d_loss[1]
 
-            if epoch % 10 == 0:
-                #print('calculating ps...')
-                #self.calc_ps(epoch)
+            if epoch % 2000 == 0:
+                print('calculating ps...')
+                self.calc_ps(epoch)
                 print('calculating brihgtness peak count...')
                 self.calc_peak_count_brightness(epoch)
 
