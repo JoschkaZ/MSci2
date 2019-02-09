@@ -203,14 +203,23 @@ class CGAN():
         return 'Done'
 
     def build_generator(self, noise, con):
-
+        """
         con1 = Dense(100, activation='tanh')(con)
         con1 = Dense(100, activation='tanh')(con1)
 
-
-
         merged_input = Concatenate()([con1, noise])
         # -> 200
+        """
+
+        con1 = Dense(12, activation='tanh')(con)
+        con1 = Dense(25, activation='tanh')(con1)
+        con1 = Dense(50, activation='tanh')(con1)
+        con1 = Dense(100, activation='tanh')(con1)
+
+        merged_input = Concatenate()([con1, noise])
+
+        merged_input = Dense(200)(merged_input)
+        merged_input = Dense(200)(merged_input)
 
         hid = Dense(128*9*9, activation='relu')(merged_input)
         # -> 128*9*9
@@ -218,31 +227,33 @@ class CGAN():
         hid = Reshape((9,9,128))(hid)
         # -> 128x9x9
 
-        hid = UpSampling2D()(hid)
-        hid = Conv2D(128, kernel_size=3, padding="same")(hid)
+        #hid = UpSampling2D()(hid)
+        hid = Conv2DTranspose(128, kernel_size=3, strides=2, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = Activation("relu")(hid)
         # -> 128x18x18
 
-        hid = UpSampling2D()(hid)
-        hid = Conv2D(128, kernel_size=3, padding="same")(hid)
+        #hid = UpSampling2D()(hid)
+        hid = Conv2DTranspose(128, kernel_size=3, strides=2, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = Activation("relu")(hid)
         # -> 128x36x36
 
-        hid = UpSampling2D()(hid)
-        hid = Conv2D(128, kernel_size=4, padding="same")(hid)
+        #hid = UpSampling2D()(hid)
+        hid = Conv2DTranspose(128, kernel_size=4, strides=2, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = Activation("relu")(hid)
         # -> 128x72x72
 
-        hid = UpSampling2D()(hid)
+        """
+        #hid = UpSampling2D()(hid)
         hid = Conv2D(128, kernel_size=4, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = Activation("relu")(hid)
         # -> 128x144x144
+        """
 
-        hid = Conv2D(1, kernel_size=5, padding="same")(hid)
+        hid = Conv2DTranspose(1, kernel_size=5, strides=2, padding="same")(hid)
         hid = Activation("tanh")(hid)
         # -> 1x144x144
 
@@ -256,44 +267,57 @@ class CGAN():
     def build_discriminator(self, img, con):
 
         hid = Conv2D(32, kernel_size=5, strides=2, padding="same")(img)
+        hid = BatchNormalization(momentum=0.8)(hid) ####NEW
         hid = LeakyReLU(alpha=0.2)(hid)
-        hid = Dropout(0.25)(hid)
+        #hid = Dropout(0.25)(hid)
         # -> 32x64x64
 
         hid = Conv2D(64, kernel_size=5, strides=2, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = LeakyReLU(alpha=0.2)(hid)
-        hid = Dropout(0.25)(hid)
+        #hid = Dropout(0.25)(hid)
         # -> 64x32x32
 
         hid = Conv2D(128, kernel_size=4, strides=2, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = LeakyReLU(alpha=0.2)(hid)
-        hid = Dropout(0.25)(hid)
+        #hid = Dropout(0.25)(hid)
         # -> 128x16x16
 
         hid = Conv2D(128, kernel_size=4, strides=2, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = LeakyReLU(alpha=0.2)(hid)
-        hid = Dropout(0.25)(hid)
+        #hid = Dropout(0.25)(hid)
         # -> 128x8x8
 
         hid = Conv2D(128, kernel_size=3, strides=2, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = LeakyReLU(alpha=0.2)(hid)
-        hid = Dropout(0.25)(hid)
+        #hid = Dropout(0.25)(hid)
         # -> 128x4x4
 
         hid = Flatten()(hid)
 
         hid = Dense(100, activation='tanh')(hid)
 
+        con1 = Dense(12, activation='tanh')(con)
+        con1 = Dense(25, activation='tanh')(con1)
+        con1 = Dense(50, activation='tanh')(con1)
+        con1 = Dense(100, activation='tanh')(con1)
+
+        """
         #EXPAND LABEL
         con1 = Dense(100, activation='tanh')(con)
         con1 = Dense(100, activation='tanh')(con1)
+        """
 
         merged_layer = Concatenate()([hid, con1])
+        merged_layer = Dropout(0.2)(merged_layer) ####NEW
         # -> 200
+
+        merged_layer = Dense(100, activation='tanh')(merged_layer)
+        merged_layer = Dense(50, activation='tanh')(merged_layer)
+        merged_layer = Dense(25, activation='tanh')(merged_layer)
 
         out = Dense(1, activation='sigmoid')(merged_layer)
         # -> 1
@@ -408,9 +432,9 @@ class CGAN():
 
                 #if epoch % 2000 == 0:
                 #print('calculating stats...')
-                #self.calc_stats(epoch)
+                #self.calc_ps(epoch)
 
-    def calc_stats(self, epoch):
+    def calc_ps(self, epoch):
         if self.find_ps == True:
             self.real_imgs_dict = {}
             for i in self.real_imgs_index:
@@ -448,6 +472,7 @@ class CGAN():
                 plt.savefig("images/ps_%d.png" % epoch)
             plt.close()
 
+
     def sample_images(self, epoch):
 
         sample_at0 = [
@@ -462,7 +487,7 @@ class CGAN():
         [11.]
         ]
         r = len(sample_at0)
-        c = 2
+        c = 3
 
         temp_copy = copy.deepcopy(sample_at0)
 
@@ -475,8 +500,14 @@ class CGAN():
         gen_imgs = self.generator.predict([noise, sample_at])
 
         # Rescale images 0 - 1
-        gen_imgs = 0.5 * gen_imgs + 0.5
+        ######gen_imgs = 0.5 * gen_imgs + 0.5
+        """
+        print('fake_min',np.min(gen_imgs))
+        print('fake_max',np.max(gen_imgs))
 
+        print('fake_min',np.min(self.imgs))
+        print('fake_max',np.max(self.imgs))
+        """
 
         fig, axs = plt.subplots(r, c, figsize=(4,18), dpi=250)
         cnt = 0
@@ -487,22 +518,37 @@ class CGAN():
                     break
                 else:
                     if j == 0:
-                        axs[i,j].imshow(gen_imgs[cnt,:,:,0], cmap='hot')
+                        axs[i,j].imshow(gen_imgs[cnt,:,:,0], cmap='hot', clim=(-1,1))
                         axs[i,j].set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in temp_copy[cnt]))
                         axs[i,j].axis('off')
+                        print('fake_min',np.min(gen_imgs[cnt,:,:,0]))
+                        print('fake_max',np.max(gen_imgs[cnt,:,:,0]))
                         cnt += 1
-                    else: #show a real image
+
+                    if j ==1: #show a real image
                         #print(temp_copy[i][0])
                         #print(self.real_imgs_index.keys())
                         if temp_copy[i][0] in self.real_imgs_index: #real images for that z are available
-                            sample_i = random.randint(0,len(self.real_imgs_index[temp_copy[i][0]]))
+
+                            sample_i = random.randint(0,len(self.real_imgs_index[temp_copy[i][0]])-1)
                             #print(self.real_imgs_index[temp_copy[i][0]])
                             sample_i = self.real_imgs_index[temp_copy[i][0]][sample_i]
                             #print(sample_i)
                             #print(self.imgs.shape)
-                            axs[i,j].imshow(self.imgs[sample_i,:,:,0], cmap='hot')
+                            axs[i,j].imshow(self.imgs[sample_i,:,:,0], cmap='hot', clim=(-1,1))
                             axs[i,j].set_title("")
+                            print('real_min',np.min(self.imgs[sample_i,:,:,0]))
+                            print('real_max',np.max(self.imgs[sample_i,:,:,0]))
                         axs[i,j].axis('off')
+
+                    if j ==2:
+                        if temp_copy[i][0] in self.real_imgs_index: #real images for that z are available
+                            fake_pix_val = stats_utils.get_pixel_val(gen_imgs[[cnt-1],:,:,:])
+                            real_pix_val = stats_utils.get_pixel_val(self.imgs[[sample_i],:,:,:])
+                            axs[i,j].hist(real_pix_val, bins=100, color="blue", label="real", alpha=0.7)
+                            axs[i,j].hist(fake_pix_val, bins=100, color="orange", label="fake", alpha=0.7)
+                            axs[i,j].legend()
+
         if platform == 'linux':
             user = utils.get_user()
             print(user)
