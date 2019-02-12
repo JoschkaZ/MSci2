@@ -422,7 +422,7 @@ class CGAN():
 
             if epoch % 2000 == 0:
                 print('calculating ps...')
-                self.calc_ps(epoch)
+                self.calc_ps(epoch, separate=True)
                 print('calculating brihgtness peak count...')
                 self.calc_peak_count_brightness(epoch)
 
