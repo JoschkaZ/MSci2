@@ -23,7 +23,7 @@ import random
 import tensorflow.keras.backend as tfback
 import tensorflow as tf
 
-def build_binary_generator(noise, con):
+def build_binary_generator(noise, con, ones, half):
 
     con1 = Dense(12, activation='tanh')(con)
     con1 = Dense(25, activation='tanh')(con1)
@@ -60,11 +60,19 @@ def build_binary_generator(noise, con):
     # -> 128x72x72
 
     hid = Conv2DTranspose(1, kernel_size=5, strides=2, padding="same")(hid)
-    hid = Activation("sigmoid")(hid) # images are binary, sigmoid should work well
+    hid = Activation("tanh")(hid) # images are binary, sigmoid should work welle
 
     out = Cropping2D(cropping=((8,8),(8,8)))(hid)
 
-    model =  Model([noise, con], out)
+    out = add([out, ones]) # ones are negative
+
+    out = multiply([out,half])
+
+
+
+
+
+    model =  Model([noise, con, ones, half], out)
     model.summary()
     return model
 
@@ -84,17 +92,20 @@ class binary_CGAN():
         ph_img = Input(shape=(128,128,1))
         ph_label = Input(shape=(self.label_dim,))
 
+        ones = Input(shape=(128,128,1))
+        half = Input(shape=(128,128,1))
+
         self.discriminator = self.build_discriminator(ph_img, ph_label)
         self.discriminator.compile(loss=['binary_crossentropy'],optimizer=optimizer,metrics=['accuracy'])
 
         noise = Input(shape=(100,))
         label = Input(shape=(self.label_dim,))
-        self.generator = build_binary_generator(noise, label)
-        img = self.generator([noise, label])
+        self.generator = build_binary_generator(noise, label, ones, half)
+        img = self.generator([noise, label, ones, half])
 
         self.discriminator.trainable = False
         valid = self.discriminator([img, label])
-        self.combined = Model([noise, label], valid)
+        self.combined = Model([noise, label, ones, half], valid)
         self.combined.compile(loss=['binary_crossentropy'],
             optimizer=optimizer)
 
@@ -259,6 +270,9 @@ class binary_CGAN():
         fake = np.zeros((batch_size, 1))
         last_acc = .75
 
+        ones = 1*np.ones(shape=(batch_size,128,128,1))
+        half = 0.5*np.ones(shape=(batch_size,128,128,1))
+
         # if the model was loaded, start at start_epoch
         if self.start_epoch != None:
             efrom = self.start_epoch
@@ -273,7 +287,7 @@ class binary_CGAN():
             # Sample noise as generator input
             noise = np.random.normal(0, 1, (batch_size, 100))
 
-            gen_imgs = self.generator.predict([noise, labels])
+            gen_imgs = self.generator.predict([noise, labels, ones, half])
 
             # NOTE GET NOISE LABEL VECTORS
             #p_flip = 0.01
@@ -304,9 +318,9 @@ class binary_CGAN():
             # Train the generator
             if last_acc < 0.7 and 1==2:
                 print('Only testing generator')
-                g_loss = self.combined.test_on_batch([noise, sampled_labels], valid)
+                g_loss = self.combined.test_on_batch([noise, sampled_labels, ones, half], valid)
             else:
-                g_loss = self.combined.train_on_batch([noise, sampled_labels], valid)
+                g_loss = self.combined.train_on_batch([noise, sampled_labels, ones, half], valid)
 
             # Plot the progress
             print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100.*d_loss[1], g_loss))
@@ -348,7 +362,10 @@ class binary_CGAN():
 
         noise = np.random.normal(0, 1, (len(sample_at), 100))
 
-        gen_imgs = self.generator.predict([noise, sample_at])
+        ones = 1*np.ones(shape=(batch_size,128,128,1))
+        half = 0.5*np.ones(shape=(batch_size,128,128,1))
+
+        gen_imgs = self.generator.predict([noise, sample_at, ones, half])
 
         # Rescale images 0 - 1
         ######gen_imgs = 0.5 * gen_imgs + 0.5
@@ -922,10 +939,10 @@ if __name__ == '__main__':
         if args[2] == 'binary':
             if args[1] == 'new':
                 bcgan = binary_CGAN(use_old_model=False)
-                bcgan.train(epochs=400000, batch_size=64, sample_interval=100, save_model_interval = 500)
+                bcgan.train(epochs=400000, batch_size=4, sample_interval=100, save_model_interval = 500)
             elif args[1] == 'continue':
                 bcgan = binary_CGAN(use_old_model=True)
-                bcgan.train(epochs=400000, batch_size=64, sample_interval=50, save_model_interval = 500)
+                bcgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
             else:
                 print('argument not recognised')
 
