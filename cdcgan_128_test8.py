@@ -34,7 +34,7 @@ class CGAN():
 
         self.read_data()
 
-        optimizer = Adam(0.0001, 0.5)
+        optimizer = Adam(0.00001, 0.5)
         ph_img = Input(shape=(128,128,1))
         ph_label = Input(shape=(self.label_dim,))
 
@@ -164,8 +164,8 @@ class CGAN():
     def read_data(self):
 
         print('importing data...')
-        data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
-        #data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+        #data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
+        data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
         print('data imported!')
 
         self.imgs = []
@@ -418,9 +418,9 @@ class CGAN():
 
             if epoch % 2000 == 0:
                 print('calculating ps...')
-                #self.calc_ps(epoch)
+                self.calc_ps(epoch)
                 print('calculating brihgtness peak count...')
-                #self.calc_peak_count_brightness(epoch)
+                self.calc_peak_count_brightness(epoch)
 
             # If at save interval => save generated image samples
             if epoch % sample_interval == 0:
@@ -601,11 +601,11 @@ if __name__ == '__main__':
     if args[1] == 'new':
         cgan = CGAN(use_old_model=False)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
+        cgan.train(epochs=400000, batch_size=64, sample_interval=50, save_model_interval = 500)
     elif args[1] == 'continue':
         cgan = CGAN(use_old_model=True)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
+        cgan.train(epochs=400000, batch_size=64, sample_interval=50, save_model_interval = 500)
     else:
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
