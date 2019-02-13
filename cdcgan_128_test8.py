@@ -20,7 +20,7 @@ from os import listdir
 from os.path import isfile, join
 import copy
 import random
-import keras.backend as K
+from keras import regularizers
 
 
 class CGAN():
@@ -88,10 +88,6 @@ class CGAN():
             self.generator.load_weights(mypath +'/21256generator_' + str(time_to_load) + '.h5')
             print(mypath +'/21256combined_' + str(time_to_load) + '.h5')
             self.combined.load_weights(mypath +'/21256combined_' + str(time_to_load) + '.h5')
-
-
-
-
 
     '''
     def __init__(self, use_old_model):
@@ -165,8 +161,6 @@ class CGAN():
             self.combined = load_model(mypath +'/21256combined_' + str(time_to_load) + '.h5')
     '''
 
-
-
     def read_data(self):
 
         print('importing data...')
@@ -216,15 +210,15 @@ class CGAN():
         # -> 200
         """
 
-        con1 = Dense(12, activation='tanh')(con)
-        con1 = Dense(25, activation='tanh')(con1)
-        con1 = Dense(50, activation='tanh')(con1)
-        con1 = Dense(100, activation='tanh')(con1)
+        con1 = Dense(12, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con)
+        con1 = Dense(25, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
+        con1 = Dense(50, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
+        con1 = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
 
         merged_input = Concatenate()([con1, noise])
 
-        merged_input = Dense(200)(merged_input)
-        merged_input = Dense(200)(merged_input)
+        merged_input = Dense(200, kernel_regularizer=regularizers.l2(0.01))(merged_input)
+        merged_input = Dense(200, kernel_regularizer=regularizers.l2(0.01))(merged_input)
 
         hid = Dense(128*9*9, activation='relu')(merged_input)
         # -> 128*9*9
@@ -265,7 +259,7 @@ class CGAN():
         out = Cropping2D(cropping=((8,8),(8,8)))(hid)
         # -> 1x128x128
 
-        model =  Model([noise, con], out) 
+        model =  Model([noise, con], out)
         model.summary()
         return model
 
@@ -303,12 +297,12 @@ class CGAN():
 
         hid = Flatten()(hid)
 
-        hid = Dense(100, activation='tanh')(hid)
+        hid = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(hid)
 
-        con1 = Dense(12, activation='tanh')(con)
-        con1 = Dense(25, activation='tanh')(con1)
-        con1 = Dense(50, activation='tanh')(con1)
-        con1 = Dense(100, activation='tanh')(con1)
+        con1 = Dense(12, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con)
+        con1 = Dense(25, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
+        con1 = Dense(50, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
+        con1 = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
 
         """
         #EXPAND LABEL
@@ -317,12 +311,12 @@ class CGAN():
         """
 
         merged_layer = Concatenate()([hid, con1])
-        merged_layer = Dropout(0.2)(merged_layer) ####NEW
+        merged_layer = Dropout(0.1)(merged_layer) ####NEW
         # -> 200
 
-        merged_layer = Dense(100, activation='tanh')(merged_layer)
-        merged_layer = Dense(50, activation='tanh')(merged_layer)
-        merged_layer = Dense(25, activation='tanh')(merged_layer)
+        merged_layer = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_layer)
+        merged_layer = Dense(50, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_layer)
+        merged_layer = Dense(25, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_layer)
 
         out = Dense(1, activation='sigmoid')(merged_layer)
         # -> 1
@@ -403,14 +397,6 @@ class CGAN():
             else:
                 d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid)
                 d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake)
-
-
-
-                t = K.cast(self.discriminator.optimizer.iterations, K.floatx()) + 1
-                lr_t = self.discriminator.optimizer.lr * (K.sqrt(1. - K.pow(self.discriminator.optimizer.beta_2, t)) /
-                             (1. - K.pow(self.discriminator.optimizer.beta_1, t)))
-
-                print(K.eval(lr_t))
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
 
