@@ -20,6 +20,8 @@ from os import listdir
 from os.path import isfile, join
 import copy
 import random
+import keras.backend as K
+
 
 class CGAN():
 
@@ -168,8 +170,8 @@ class CGAN():
     def read_data(self):
 
         print('importing data...')
-        #data = pkl.load( open( "C:\Outputs\slices2_32.pkl", "rb" ) )
-        data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+        data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
+        #data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
         print('data imported!')
 
         self.imgs = []
@@ -401,6 +403,14 @@ class CGAN():
             else:
                 d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid)
                 d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake)
+
+
+
+                t = K.cast(self.discriminator.optimizer.iterations, K.floatx()) + 1
+                lr_t = self.discriminator.optimizer.lr * (K.sqrt(1. - K.pow(self.discriminator.optimizer.beta_2, t)) /
+                             (1. - K.pow(self.discriminator.optimizer.beta_1, t)))
+
+                print(K.eval(lr_t))
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
 
@@ -422,9 +432,9 @@ class CGAN():
 
             if epoch % 2000 == 0:
                 print('calculating ps...')
-                self.calc_ps(epoch)
+                #self.calc_ps(epoch)
                 print('calculating brihgtness peak count...')
-                self.calc_peak_count_brightness(epoch)
+                #self.calc_peak_count_brightness(epoch)
 
             # If at save interval => save generated image samples
             if epoch % sample_interval == 0:
@@ -605,11 +615,11 @@ if __name__ == '__main__':
     if args[1] == 'new':
         cgan = CGAN(use_old_model=False)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=64, sample_interval=50, save_model_interval = 500)
+        cgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
     elif args[1] == 'continue':
         cgan = CGAN(use_old_model=True)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=64, sample_interval=50, save_model_interval = 500)
+        cgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
     else:
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
