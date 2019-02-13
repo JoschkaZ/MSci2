@@ -265,7 +265,7 @@ class CGAN():
         out = Cropping2D(cropping=((8,8),(8,8)))(hid)
         # -> 1x128x128
 
-        model =  Model([noise, con], out)
+        model =  Model([noise, con], out) 
         model.summary()
         return model
 
