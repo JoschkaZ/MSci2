@@ -22,18 +22,21 @@ import copy
 import random
 import tensorflow.keras.backend as tfback
 import tensorflow as tf
+from keras import regularizers
+
 
 def build_binary_generator(noise, con, ones, half):
 
-    con1 = Dense(12, activation='tanh')(con)
-    con1 = Dense(25, activation='tanh')(con1)
-    con1 = Dense(50, activation='tanh')(con1)
-    con1 = Dense(100, activation='tanh')(con1)
+    con1 = Dense(12, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con)
+
+    con1 = Dense(25, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
+    con1 = Dense(50, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
+    con1 = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
 
     merged_input = Concatenate()([con1, noise])
 
-    merged_input = Dense(200)(merged_input)
-    merged_input = Dense(200)(merged_input)
+    merged_input = Dense(200, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_input)
+    merged_input = Dense(200, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_input)
 
     hid = Dense(128*9*9, activation='relu')(merged_input)
     # -> 128*9*9
@@ -175,20 +178,20 @@ class binary_CGAN():
 
         hid = Flatten()(hid)
 
-        hid = Dense(100, activation='tanh')(hid)
+        hid = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(hid)
 
-        con1 = Dense(12, activation='tanh')(con)
-        con1 = Dense(25, activation='tanh')(con1)
-        con1 = Dense(50, activation='tanh')(con1)
-        con1 = Dense(100, activation='tanh')(con1)
+        con1 = Dense(12, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con)
+        con1 = Dense(25, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
+        con1 = Dense(50, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
+        con1 = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
 
         merged_layer = Concatenate()([hid, con1])
-        merged_layer = Dropout(0.2)(merged_layer) ####NEW
+        merged_layer = Dropout(0.1)(merged_layer) ####NEW
         # -> 200
 
-        merged_layer = Dense(100, activation='tanh')(merged_layer)
-        merged_layer = Dense(50, activation='tanh')(merged_layer)
-        merged_layer = Dense(25, activation='tanh')(merged_layer)
+        merged_layer = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_layer)
+        merged_layer = Dense(50, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_layer)
+        merged_layer = Dense(25, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_layer)
 
         out = Dense(1, activation='sigmoid')(merged_layer)
         # -> 1
@@ -202,35 +205,42 @@ class binary_CGAN():
 
     def binarize_images(self):
 
-        print('binarising images')
-        vf = np.vectorize(self.f)
-        mmin = np.min(self.imgs)
-        mmax = np.max(self.imgs)
-        tolerance = 0.00001
 
-        for i in range(len(self.imgs)):
+        if not isfile("binarised_images.pkl"):
 
-            if i % (int(len(self.imgs)/100.)) == 0:
-                print(np.round(i/len(self.imgs)*100,2))
+            print('binarising images')
+            vf = np.vectorize(self.f)
+            mmin = np.min(self.imgs)
+            mmax = np.max(self.imgs)
+            tolerance = 0.00001
 
-            #if i == 0:
-            #    f, axarr = plt.subplots(2)
-            #    axarr[0].imshow(self.imgs[i])
+            for i in range(len(self.imgs)):
 
-            if np.abs((np.min(self.imgs[i]) - mmin) / (mmax-mmin)) > tolerance:
-                print('WARNING - ', mmin, np.min(self.imgs[i]))
+                if i % (int(len(self.imgs)/100.)) == 0:
+                    print(np.round(i/len(self.imgs)*100,2))
 
-            mmin = copy.deepcopy(np.min(self.imgs[i]))
-            mmax = copy.deepcopy(np.max(self.imgs[i]))
-            self.imgs[i] = vf(self.imgs[i], mmin, mmax, tolerance)
+                #if i == 0:
+                #    f, axarr = plt.subplots(2)
+                #    axarr[0].imshow(self.imgs[i])
+
+                if np.abs((np.min(self.imgs[i]) - mmin) / (mmax-mmin)) > tolerance:
+                    print('WARNING - ', mmin, np.min(self.imgs[i]))
+
+                mmin = copy.deepcopy(np.min(self.imgs[i]))
+                mmax = copy.deepcopy(np.max(self.imgs[i]))
+                self.imgs[i] = vf(self.imgs[i], mmin, mmax, tolerance)
 
 
-            #if i == 0:
-            #    axarr[1].imshow(self.imgs[i])
-            #    plt.show()
-            #    plt.close()
+                #if i == 0:
+                #    axarr[1].imshow(self.imgs[i])
+                #    plt.show()
+                #    plt.close()
 
-        self.imgs = np.expand_dims(self.imgs, axis=3)
+            self.imgs = np.expand_dims(self.imgs, axis=3)
+            pkl.dump( self.imgs, open( "binarised_images.pkl", "wb" ) )
+
+        else:
+            self.imgs = pkl.load( open( "binarised_images.pkl", "rb" ) )
 
         return True
 
@@ -290,25 +300,25 @@ class binary_CGAN():
             gen_imgs = self.generator.predict([noise, labels, ones, half])
 
             # NOTE GET NOISE LABEL VECTORS
-            #p_flip = 0.01
-            #noise_range = 0.1
-            #valid_noisy  = np.array([random.uniform(1.-noise_range,1.) if (random.uniform(0,1)<1.-p_flip) else random.uniform(0.,noise_range) for _ in range(batch_size)])
-            #fake_noisy  = np.array([random.uniform(0.,noise_range) if (random.uniform(0,1)<1.-p_flip) else random.uniform(1.-noise_range,1.) for _ in range(batch_size)])
+            p_flip = 0.02
+            noise_range = 0.1
+            valid_noisy  = np.array([random.uniform(1.-noise_range,1.) if (random.uniform(0,1)<1.-p_flip) else random.uniform(0.,noise_range) for _ in range(batch_size)])
+            fake_noisy  = np.array([random.uniform(0.,noise_range) if (random.uniform(0,1)<1.-p_flip) else random.uniform(1.-noise_range,1.) for _ in range(batch_size)])
 
-            #imgs = imgs + np.random.normal(0, 0.01, size=imgs.shape)
-            #gen_imgs = gen_imgs + np.random.normal(0, 0.01, size=imgs.shape)
+            imgs = imgs + np.random.normal(0, 0.05, size=imgs.shape)
+            gen_imgs = gen_imgs + np.random.normal(0, 0.05, size=imgs.shape)
 
 
             #Train the discriminator
             #if (epoch < 200) and (epoch%5!=0):
-            if last_acc > 0.8:
+            if last_acc > 0.8 and 1==2:
                 print('Only testing discriminator')
-                d_loss_real = self.discriminator.test_on_batch([imgs, labels], valid)
-                d_loss_fake = self.discriminator.test_on_batch([gen_imgs, labels], fake)
+                d_loss_real = self.discriminator.test_on_batch([imgs, labels], valid_noisy)
+                d_loss_fake = self.discriminator.test_on_batch([gen_imgs, labels], fake_noisy)
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
             else:
-                d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid)
-                d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake)
+                d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid_noisy)
+                d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake_noisy)
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
 
@@ -325,6 +335,7 @@ class binary_CGAN():
             # Plot the progress
             print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100.*d_loss[1], g_loss))
             last_acc = d_loss[1]
+            #lossratio = max(d_loss[0]/g_loss, g_loss/d_loss[0])
 
             if epoch % sample_interval == 0:
                 self.sample_images(epoch)
@@ -362,8 +373,8 @@ class binary_CGAN():
 
         noise = np.random.normal(0, 1, (len(sample_at), 100))
 
-        ones = 1*np.ones(shape=(batch_size,128,128,1))
-        half = 0.5*np.ones(shape=(batch_size,128,128,1))
+        ones = 1*np.ones(shape=(len(sample_at),128,128,1))
+        half = 0.5*np.ones(shape=(len(sample_at),128,128,1))
 
         gen_imgs = self.generator.predict([noise, sample_at, ones, half])
 
