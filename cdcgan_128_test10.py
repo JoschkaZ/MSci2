@@ -311,7 +311,7 @@ class CGAN():
         """
 
         merged_layer = Concatenate()([hid, con1])
-        merged_layer = Dropout(0.2)(merged_layer) ####NEW
+        merged_layer = Dropout(0.1)(merged_layer) ####NEW
         # -> 200
 
         merged_layer = Dense(100, activation='tanh')(merged_layer)
@@ -388,16 +388,25 @@ class CGAN():
 
             gen_imgs = self.generator.predict([noise, labels])
 
+            #Noisy labels and images
+            p_flip = 0.05
+            noise_range = 0.1
+            valid_noisy  = np.array([random.uniform(1.-noise_range,1.) if (random.uniform(0,1)<1.-p_flip) else random.uniform(0.,noise_range) for _ in range(batch_size)])
+            fake_noisy  = np.array([random.uniform(0.,noise_range) if (random.uniform(0,1)<1.-p_flip) else random.uniform(1.-noise_range,1.) for _ in range(batch_size)])
+
+            imgs = imgs + np.random.normal(0, 0.01, size=imgs.shape)
+            gen_imgs = gen_imgs + np.random.normal(0, 0.01, size=imgs.shape)
+
 
             #Train the discriminator
             if last_acc > 0.8:
                 print('Only testing discriminator')
-                d_loss_real = self.discriminator.test_on_batch([imgs, labels], valid)
-                d_loss_fake = self.discriminator.test_on_batch([gen_imgs, labels], fake)
+                d_loss_real = self.discriminator.test_on_batch([imgs, labels], valid_noisy)
+                d_loss_fake = self.discriminator.test_on_batch([gen_imgs, labels], fake_noisy)
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
             else:
-                d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid)
-                d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake)
+                d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid_noisy)
+                d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake_noisy)
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
 
