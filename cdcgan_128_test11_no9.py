@@ -29,12 +29,12 @@ class CGAN():
         self.imgs = []
         self.labels = []
         self.start_time = str(time.time()).split('.')[0]
-        self.label_dim = None
+        self.label_dim = -1
         self.start_epoch = None
 
         self.read_data()
 
-        optimizer = Adam(0.001, 0.5)
+        optimizer = Adam(0.0001, 0.5)
         ph_img = Input(shape=(128,128,1))
         ph_label = Input(shape=(self.label_dim,))
 
@@ -92,8 +92,8 @@ class CGAN():
     def read_data(self):
 
         print('importing data...')
-        data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
-        #data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+        #data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
+        data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
         print('data imported!')
 
         self.imgs = []
@@ -135,10 +135,6 @@ class CGAN():
         kernel_size = 5
 
         con1 = Dense(n_channel, activation='tanh')(con) #model settings
-        #con1 = Dense(n_channel, activation='tanh')(con1) #model settings
-        #con1 = Dense(n_channel, activation='tanh')(con1) #model settings
-        #con1 = Dense(n_channel, activation='tanh')(con1) #model settings
-        #con1 = Dense(n_channel, activation='tanh')(con1) #model settings
         con1 = Reshape((1,1,n_channel))(con1)
         con1 = UpSampling2D((144,144))(con1)
 
@@ -276,7 +272,14 @@ class CGAN():
         print(self.imgs.shape)
         print(self.labels.shape)
 
-
+        indices = [x for x in range(len(self.labels)) if (self.labels[x] != 0)]
+        #print(self.labels[100])
+        self.imgs_all = copy.deepcopy(self.imgs)
+        self.labels_all = copy.deepcopy(self.labels)
+        self.imgs = self.imgs[indices]
+        self.labels = self.labels[indices]
+        print(self.imgs.shape)
+        print(self.labels.shape)
 
         #Adversarial ground truths
         valid = np.ones((batch_size, 1))
@@ -293,6 +296,8 @@ class CGAN():
             # Select a random half batch of images
             idx = np.random.randint(0, self.imgs.shape[0], batch_size)
             imgs, labels = self.imgs[idx], self.labels[idx]
+
+            print(labels)
 
             # Sample noise as generator input
             noise = np.random.normal(0, 1, (batch_size, 100))
@@ -328,7 +333,7 @@ class CGAN():
 
             if epoch % 2000 == 0:
                 print('calculating ps...')
-                self.calc_ps(epoch)
+                self.calc_ps(epoch, separate=True)
                 print('calculating brihgtness peak count...')
                 self.calc_peak_count_brightness(epoch)
 
@@ -346,38 +351,87 @@ class CGAN():
                 self.discriminator.save_weights('models/21256generatorweights_' + str(self.start_time) + '.h5')
 
 
-    def calc_ps(self, epoch):
-        if self.find_ps == True:
-            self.real_imgs_dict_ps = {}
-            for i in self.real_imgs_index:
-                intv = int(len(self.real_imgs_index[i])/99)
-                index_list = self.real_imgs_index[i][::intv]
-                real_imgs = self.imgs[index_list]
-                real_imgs = np.squeeze(real_imgs)
-                #print(real_imgs)
-                #print(np.shape(real_imgs))
-                real_ave_ps,real_ps_std,k_list_real = stats_utils.produce_average_ps(real_imgs)
-                self.real_imgs_dict_ps[i] = [real_ave_ps[1:],k_list_real[1:]]
-            self.find_ps = False
+    def calc_ps(self, epoch, separate=False):
+        if separate == False:
+            if self.find_ps == True:
+                self.real_imgs_dict_ps = {}
+                for i in self.real_imgs_index:
+                    intv = int(len(self.real_imgs_index[i])/99)
+                    index_list = self.real_imgs_index[i][::intv]
+                    real_imgs = self.imgs_all[index_list]
+                    real_imgs = np.squeeze(real_imgs)
+                    #print(real_imgs)
+                    #print(np.shape(real_imgs))
+                    real_ave_ps,real_ps_std,k_list_real = stats_utils.produce_average_ps(real_imgs)
+                    self.real_imgs_dict_ps[i] = [real_ave_ps[1:],k_list_real[1:]]
+                self.find_ps = False
 
-        else:
-            noise = np.random.normal(0, 1, (100, 100))
+            else:
+                noise = np.random.normal(0, 1, (100, 100))
 
-            mal = max(self.real_imgs_index.keys())
-            mil = min(self.real_imgs_index.keys())
-            for z in self.real_imgs_index:
-                z_vec = np.array([[z]]*100)
-                z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
-                gen_imgs = self.generator.predict([noise, np.reshape(z_vec,(100,1))])
-                gen_imgs = np.squeeze(gen_imgs)
-                fake_ave_ps,fake_ps_std,k_list_fake = stats_utils.produce_average_ps(gen_imgs)
-                plt.errorbar(x=k_list_fake[1:], y=fake_ave_ps[1:], yerr=fake_ps_std[1:], alpha=0.5, label="fake z="+str(z))
-                plt.yscale('log')
-                plt.plot(self.real_imgs_dict_ps[z][1],self.real_imgs_dict_ps[z][0], label="real z="+str(z))
-                plt.yscale('log')
-                plt.legend()
-                plt.savefig("images/ps_%d.png" % epoch)
-            plt.close()
+                mal = max(self.real_imgs_index.keys())
+                mil = min(self.real_imgs_index.keys())
+                for z in self.real_imgs_index:
+                    z_vec = np.array([[z]]*100)
+                    z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
+                    gen_imgs = self.generator.predict([noise, np.reshape(z_vec,(100,1))])
+                    gen_imgs = np.squeeze(gen_imgs)
+                    fake_ave_ps,fake_ps_std,k_list_fake = stats_utils.produce_average_ps(gen_imgs)
+                    plt.errorbar(x=k_list_fake[1:], y=fake_ave_ps[1:], yerr=fake_ps_std[1:], alpha=0.5, label="fake z="+str(z))
+                    plt.yscale('log')
+                    plt.plot(self.real_imgs_dict_ps[z][1],self.real_imgs_dict_ps[z][0], label="real z="+str(z))
+                    plt.yscale('log')
+                    plt.legend()
+                    plt.savefig("images/ps_%d.png" % epoch)
+                plt.close()
+
+        if separate == True:
+            z_list_ps = range(7,12)
+            if self.find_ps == True:
+                self.real_imgs_dict_ps = {}
+                for i in self.real_imgs_index:
+                    intv = int(len(self.real_imgs_index[i])/100)
+                    index_list = self.real_imgs_index[i][::intv]
+                    real_imgs = self.imgs_all[index_list]
+                    real_imgs = np.squeeze(real_imgs)
+                    #print(real_imgs)
+                    #print(np.shape(real_imgs))
+                    real_ave_ps,real_ps_std,k_list_real = stats_utils.produce_average_ps(real_imgs)
+                    self.real_imgs_dict_ps[i] = [real_ave_ps[1:],k_list_real[1:]]
+                self.find_ps = False
+
+            else:
+                noise = np.random.normal(0, 1, (100, 100))
+
+                mal = max(self.real_imgs_index.keys())
+                mil = min(self.real_imgs_index.keys())
+                self.fake_imgs_dict_ps = {}
+                for z in self.real_imgs_index:
+                    z_vec = np.array([[z]]*100)
+                    z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
+                    gen_imgs = self.generator.predict([noise, np.reshape(z_vec,(100,1))])
+                    gen_imgs = np.squeeze(gen_imgs)
+                    fake_ave_ps,fake_ps_std,k_list_fake = stats_utils.produce_average_ps(gen_imgs)
+                    self.fake_imgs_dict_ps[z] = [fake_ave_ps[1:],k_list_fake[1:],fake_ps_std[1:]]
+
+                r = 5
+                c = 1
+                fig, axs = plt.subplots(r, c, figsize=(4,18), dpi=250)
+                cnt = 0
+                for z in z_list_ps:
+                    axs[cnt].errorbar(x=self.fake_imgs_dict_ps[z][1], y=self.fake_imgs_dict_ps[z][0], yerr=self.fake_imgs_dict_ps[z][2])
+                    axs[cnt].set_yscale('log')
+                    axs[cnt].plot(self.real_imgs_dict_ps[z][1],self.real_imgs_dict_ps[z][0])
+                    axs[cnt].set_yscale('log')
+                    #axs[cnt].legend()
+
+                    #axs[cnt].hist(self.real_imgs_dict_ps[z], bins=100, color="blue", label="real", alpha=0.7)
+                    #axs[cnt].hist(self.fake_imgs_dict_ps[z], bins=100, color="orange", label="fake", alpha=0.7)
+                    axs[cnt].set_title("Labels: %d" % z)
+                    axs[cnt].legend()
+                    cnt += 1
+                fig.savefig("images/ps_separate_%d.png" % epoch)
+                plt.close()
 
     def calc_peak_count_brightness(self, epoch):
         z_list_pk = range(7,12)
@@ -386,7 +440,7 @@ class CGAN():
             for i in self.real_imgs_index:
                 intv = int(len(self.real_imgs_index[i])/10)
                 index_list = self.real_imgs_index[i][::intv]
-                real_imgs = self.imgs[index_list]
+                real_imgs = self.imgs_all[index_list]
                 #real_imgs = np.squeeze(real_imgs)
                 rl_brightness_list = stats_utils.get_peak_vs_brightness(real_imgs)
                 self.real_imgs_dict_pk[i] = [rl_brightness_list]
@@ -481,16 +535,16 @@ class CGAN():
                             sample_i = self.real_imgs_index[temp_copy[i][0]][sample_i]
                             #print(sample_i)
                             #print(self.imgs.shape)
-                            axs[i,j].imshow(self.imgs[sample_i,:,:,0], cmap='hot', clim=(-1,1))
+                            axs[i,j].imshow(self.imgs_all[sample_i,:,:,0], cmap='hot', clim=(-1,1))
                             axs[i,j].set_title("")
-                            print('real_min',np.min(self.imgs[sample_i,:,:,0]))
-                            print('real_max',np.max(self.imgs[sample_i,:,:,0]))
+                            print('real_min',np.min(self.imgs_all[sample_i,:,:,0]))
+                            print('real_max',np.max(self.imgs_all[sample_i,:,:,0]))
                         axs[i,j].axis('off')
 
                     if j ==2:
                         if temp_copy[i][0] in self.real_imgs_index: #real images for that z are available
                             fake_pix_val = stats_utils.get_pixel_val(gen_imgs[[cnt-1],:,:,:])
-                            real_pix_val = stats_utils.get_pixel_val(self.imgs[[sample_i],:,:,:])
+                            real_pix_val = stats_utils.get_pixel_val(self.imgs_all[[sample_i],:,:,:])
                             axs[i,j].hist(real_pix_val, range=(-1,1), bins=100, color="blue", label="real", alpha=0.7)
                             axs[i,j].hist(fake_pix_val, range=(-1,1), bins=100, color="orange", label="fake", alpha=0.7)
                             axs[i,j].legend()
@@ -509,19 +563,11 @@ if __name__ == '__main__':
     if args[1] == 'new':
         cgan = CGAN(use_old_model=False)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-<<<<<<< HEAD
-        cgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
+        cgan.train(epochs=400000, batch_size=32, sample_interval=500, save_model_interval = 500)
     elif args[1] == 'continue':
         cgan = CGAN(use_old_model=True)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
-=======
-        cgan.train(epochs=400000, batch_size=32, sample_interval=50, save_model_interval = 500)
-    elif args[1] == 'continue':
-        cgan = CGAN(use_old_model=True)
-        #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=32, sample_interval=50, save_model_interval = 500)
->>>>>>> 43c3e4b20e75fa1c4a711102452cdc9a66e91410
+        cgan.train(epochs=400000, batch_size=32, sample_interval=500, save_model_interval = 500)
     else:
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
