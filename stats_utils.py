@@ -140,6 +140,7 @@ def raPsd2d(img, res, show=False):
 
 
 def produce_average_ps(slices):
+    print('that',slices.shape)
     img_width = slices.shape[1]
     #print('width',img_width)
     PS = np.zeros(int(img_width/2)-1) #the first value of the PS is always zero so ignore that
@@ -169,6 +170,7 @@ def produce_average_ps(slices):
 
     for k in range(len(values_list)):
         std = np.std(values_list[k])
+        std = std/np.sqrt(len(values_list[k]))
         std_list.append(std)
     return PS,std_list,k_list
 
@@ -212,6 +214,7 @@ def get_pk_hist(slices):
 
 
 def get_peak_vs_brightness(slices):
+    print('the other',slices.shape)
     #print('slices shape',slices.shape)
     N = len(slices)
     #print('N',N)
@@ -242,7 +245,7 @@ def get_peak_vs_brightness(slices):
 
 
 def get_pixel_val(slices):
-    print(slices.shape)
+    print('this',slices.shape)
     N = len(slices)
     elem = [] #list of elements to use for histogram
 
