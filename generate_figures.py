@@ -148,5 +148,5 @@ for i in range(r):
                 axs[i,j].hist(fake_pix_val, range=(-1,1), bins=100, color="orange", label="fake", alpha=0.7)
                 axs[i,j].legend()
 
-fig.savefig("all_stats.png")
+fig.savefig("images/all_stats.png")
 plt.close()
