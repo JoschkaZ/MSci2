@@ -291,13 +291,16 @@ class CGAN():
             efrom = self.start_epoch
         else:
             efrom = 0
+
+        self.ps_ave_from_models = {} #1st key is k_list, then different z
+
         for epoch in range(efrom,epochs): #these are not proper epochs, it just selects one batch randomly each time
 
             # Select a random half batch of images
             idx = np.random.randint(0, self.imgs.shape[0], batch_size)
             imgs, labels = self.imgs[idx], self.labels[idx]
 
-            print(labels)
+            #print(labels)
 
             # Sample noise as generator input
             noise = np.random.normal(0, 1, (batch_size, 100))
@@ -331,9 +334,10 @@ class CGAN():
             print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100.*d_loss[1], g_loss))
             last_acc = d_loss[1]
 
-            if epoch % 2000 == 0:
+            if epoch % 500 == 0:
                 print('calculating ps...')
                 self.calc_ps(epoch, separate=True)
+                pkl.dump(self.ps_ave_from_models, open("models/ps_ave_from_models.pkl", 'wb'))
                 print('calculating brihgtness peak count...')
                 self.calc_peak_count_brightness(epoch)
 
@@ -364,6 +368,7 @@ class CGAN():
                     #print(np.shape(real_imgs))
                     real_ave_ps,real_ps_std,k_list_real = stats_utils.produce_average_ps(real_imgs)
                     self.real_imgs_dict_ps[i] = [real_ave_ps[1:],k_list_real[1:]]
+                self.ps_ave_from_models['k_list'] = k_list_real
                 self.find_ps = False
 
             else:
@@ -383,6 +388,14 @@ class CGAN():
                     plt.yscale('log')
                     plt.legend()
                     plt.savefig("images/ps_%d.png" % epoch)
+
+                    if not z in self.ps_ave_from_models:
+                        self.ps_ave_from_models[z] = [fake_ave_ps]
+                    else:
+                        if len(self.ps_ave_from_models[z]) > 99: ###100
+                            del self.ps_ave_from_models[z][0]
+                        self.ps_ave_from_models[z].append(fake_ave_ps)
+
                 plt.close()
 
         if separate == True:
@@ -398,6 +411,7 @@ class CGAN():
                     #print(np.shape(real_imgs))
                     real_ave_ps,real_ps_std,k_list_real = stats_utils.produce_average_ps(real_imgs)
                     self.real_imgs_dict_ps[i] = [real_ave_ps[1:],k_list_real[1:]]
+                self.ps_ave_from_models['k_list'] = k_list_real
                 self.find_ps = False
 
             else:
@@ -414,6 +428,13 @@ class CGAN():
                     fake_ave_ps,fake_ps_std,k_list_fake = stats_utils.produce_average_ps(gen_imgs)
                     self.fake_imgs_dict_ps[z] = [fake_ave_ps[1:],k_list_fake[1:],fake_ps_std[1:]]
 
+                    if not z in self.ps_ave_from_models:
+                        self.ps_ave_from_models[z] = [fake_ave_ps]
+                    else:
+                        if len(self.ps_ave_from_models[z]) > 99: ###100
+                            del self.ps_ave_from_models[z][0]
+                        self.ps_ave_from_models[z].append(fake_ave_ps)
+
                 r = 5
                 c = 1
                 fig, axs = plt.subplots(r, c, figsize=(4,18), dpi=250)
@@ -428,7 +449,7 @@ class CGAN():
                     #axs[cnt].hist(self.real_imgs_dict_ps[z], bins=100, color="blue", label="real", alpha=0.7)
                     #axs[cnt].hist(self.fake_imgs_dict_ps[z], bins=100, color="orange", label="fake", alpha=0.7)
                     axs[cnt].set_title("Labels: %d" % z)
-                    axs[cnt].legend()
+                    #axs[cnt].legend()
                     cnt += 1
                 fig.savefig("images/ps_separate_%d.png" % epoch)
                 plt.close()
