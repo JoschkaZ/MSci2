@@ -1,7 +1,7 @@
 
 from __future__ import print_function, division
 #from keras.datasets import mnist
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, add
+from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, Concatenate, add, Add, UpSampling2D, Multiply
 from keras.layers import BatchNormalization, Activation, Embedding, ZeroPadding2D, Conv2DTranspose, Cropping2D
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
@@ -27,53 +27,97 @@ from keras import regularizers
 
 def build_binary_generator(noise, con, ones, half):
 
-    con1 = Dense(12, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con)
+    def f():
+        pass
+        '''
+        con1 = Dense(12, activation='tanh', kernel_regularizer=regularizers.l2(0.0001))(con)
 
-    con1 = Dense(25, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
-    con1 = Dense(50, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
-    con1 = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
+        con1 = Dense(25, activation='tanh', kernel_regularizer=regularizers.l2(0.0001))(con1)
+        con1 = Dense(50, activation='tanh', kernel_regularizer=regularizers.l2(0.0001))(con1)
+        con1 = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.0001))(con1)
 
-    merged_input = Concatenate()([con1, noise])
+        merged_input = Concatenate()([con1, noise])
 
-    merged_input = Dense(200, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_input)
-    merged_input = Dense(200, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_input)
+        merged_input = Dense(200, activation='tanh', kernel_regularizer=regularizers.l2(0.0001))(merged_input)
+        merged_input = Dense(200, activation='tanh', kernel_regularizer=regularizers.l2(0.0001))(merged_input)
 
-    hid = Dense(128*9*9, activation='relu')(merged_input)
-    # -> 128*9*9
+        hid = Dense(128*9*9, activation='relu')(merged_input)
+        # -> 128*9*9
 
-    hid = Reshape((9,9,128))(hid)
-    # -> 128x9x9
+        hid = Reshape((9,9,128))(hid)
+        # -> 128x9x9
 
-    #hid = UpSampling2D()(hid)
-    hid = Conv2DTranspose(128, kernel_size=3, strides=2, padding="same")(hid)
+        #hid = UpSampling2D()(hid)
+        hid = Conv2DTranspose(128, kernel_size=3, strides=2, padding="same")(hid)
+        hid = BatchNormalization(momentum=0.8)(hid)
+        hid = Activation("relu")(hid)
+        # -> 128x18x18
+
+        #hid = UpSampling2D()(hid)
+        hid = Conv2DTranspose(128, kernel_size=3, strides=2, padding="same")(hid)
+        hid = BatchNormalization(momentum=0.8)(hid)
+        hid = Activation("relu")(hid)
+        # -> 128x36x36
+
+        #hid = UpSampling2D()(hid)
+        hid = Conv2DTranspose(128, kernel_size=4, strides=2, padding="same")(hid)
+        hid = BatchNormalization(momentum=0.8)(hid)
+        hid = Activation("relu")(hid)
+        # -> 128x72x72
+
+        hid = Conv2DTranspose(1, kernel_size=5, strides=2, padding="same")(hid)
+        hid = Activation("tanh")(hid) # images are binary, sigmoid should work welle
+
+        out = Cropping2D(cropping=((8,8),(8,8)))(hid)
+        '''
+
+    n_channel = 128
+    kernel_size = 5
+
+    con1 = Dense(n_channel, activation='tanh')(con) #model settings
+    con1 = Reshape((1,1,n_channel))(con1)
+    con1 = UpSampling2D((144,144))(con1)
+
+
+    hid = Dense(n_channel*9*9, activation='relu')(noise)
+
+    hid = Reshape((9,9,n_channel))(hid)
+
+    hid = Conv2DTranspose(n_channel, kernel_size=kernel_size, strides=2, padding="same")(hid)
     hid = BatchNormalization(momentum=0.8)(hid)
     hid = Activation("relu")(hid)
-    # -> 128x18x18
 
-    #hid = UpSampling2D()(hid)
-    hid = Conv2DTranspose(128, kernel_size=3, strides=2, padding="same")(hid)
+    hid = Conv2DTranspose(n_channel, kernel_size=kernel_size, strides=2, padding="same")(hid)
     hid = BatchNormalization(momentum=0.8)(hid)
     hid = Activation("relu")(hid)
-    # -> 128x36x36
 
-    #hid = UpSampling2D()(hid)
-    hid = Conv2DTranspose(128, kernel_size=4, strides=2, padding="same")(hid)
+    hid = Conv2DTranspose(n_channel, kernel_size=kernel_size, strides=2, padding="same")(hid)
     hid = BatchNormalization(momentum=0.8)(hid)
     hid = Activation("relu")(hid)
-    # -> 128x72x72
 
-    hid = Conv2DTranspose(1, kernel_size=5, strides=2, padding="same")(hid)
-    hid = Activation("tanh")(hid) # images are binary, sigmoid should work welle
+    hid = Conv2DTranspose(n_channel, kernel_size=kernel_size, strides=2, padding="same")(hid)
+    hid = BatchNormalization(momentum=0.8)(hid)
+    hid = Activation("relu")(hid) # -> 128x144x144
+    hid = Multiply()([hid, con1])
+
+    hid = Conv2D(n_channel, kernel_size=kernel_size, strides=1, padding="same")(hid)
+    hid = BatchNormalization(momentum=0.8)(hid)
+    hid = Activation("relu")(hid) # -> 128x144x144
+    hid = Multiply()([hid, con1])
+
+    hid = Conv2D(n_channel, kernel_size=kernel_size, strides=1, padding="same")(hid)
+    hid = BatchNormalization(momentum=0.8)(hid)
+    hid = Activation("relu")(hid) # -> 128x144x144
+    hid = Multiply()([hid, con1])
+
+    hid = Conv2D(1, kernel_size=kernel_size, strides=1, padding="same")(hid)
+    hid = Activation("tanh")(hid)
 
     out = Cropping2D(cropping=((8,8),(8,8)))(hid)
 
     out = add([out, ones]) # ones are negative
 
     out = multiply([out,half])
-
-
-
-
 
     model =  Model([noise, con, ones, half], out)
     model.summary()
@@ -91,7 +135,7 @@ class binary_CGAN():
 
         self.read_data()
 
-        optimizer = Adam(0.0001, 0.5)
+        optimizer = Adam(0.001, 0.5)
         ph_img = Input(shape=(128,128,1))
         ph_label = Input(shape=(self.label_dim,))
 
@@ -114,8 +158,8 @@ class binary_CGAN():
 
     def read_data(self):
 
-        #data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
-        data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
+        data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+        #data = pkl.load(open(r"D:\\Outputs\\slices2_128.pkl", "rb"))
 
         self.imgs = []
         self.labels = []
@@ -146,55 +190,52 @@ class binary_CGAN():
 
     def build_discriminator(self, img, con):
 
-        hid = Conv2D(32, kernel_size=5, strides=2, padding="same")(img)
-        hid = BatchNormalization(momentum=0.8)(hid) ####NEW
-        hid = LeakyReLU(alpha=0.2)(hid)
-        #hid = Dropout(0.25)(hid)
-        # -> 32x64x64
 
-        hid = Conv2D(64, kernel_size=5, strides=2, padding="same")(hid)
-        hid = BatchNormalization(momentum=0.8)(hid)
-        hid = LeakyReLU(alpha=0.2)(hid)
-        #hid = Dropout(0.25)(hid)
-        # -> 64x32x32
+        n_channel = 128
+        kernel_size = 5
 
-        hid = Conv2D(128, kernel_size=4, strides=2, padding="same")(hid)
-        hid = BatchNormalization(momentum=0.8)(hid)
-        hid = LeakyReLU(alpha=0.2)(hid)
-        #hid = Dropout(0.25)(hid)
-        # -> 128x16x16
+        con1 = Dense(n_channel, activation='tanh')(con) #model settings
+        con1 = Reshape((1,1,n_channel))(con1)
+        con1 = UpSampling2D((128,128))(con1)
 
-        hid = Conv2D(128, kernel_size=4, strides=2, padding="same")(hid)
-        hid = BatchNormalization(momentum=0.8)(hid)
-        hid = LeakyReLU(alpha=0.2)(hid)
-        #hid = Dropout(0.25)(hid)
-        # -> 128x8x8
 
-        hid = Conv2D(128, kernel_size=3, strides=2, padding="same")(hid)
+        hid = Conv2D(n_channel, kernel_size=kernel_size, strides=1, padding="same")(img)
         hid = BatchNormalization(momentum=0.8)(hid)
-        hid = LeakyReLU(alpha=0.2)(hid)
-        #hid = Dropout(0.25)(hid)
-        # -> 128x4x4
+        hid = LeakyReLU(alpha=0.2)(hid) # -> 32
+        hid = Multiply()([hid, con1]) # -> 128x128xn_channel
+
+        hid = Conv2D(n_channel, kernel_size=kernel_size, strides=1, padding="same")(hid)
+        hid = BatchNormalization(momentum=0.8)(hid)
+        hid = LeakyReLU(alpha=0.2)(hid) # -> 32
+        hid = Multiply()([hid, con1])
+
+        hid = Conv2D(n_channel, kernel_size=kernel_size, strides=1, padding="same")(hid)
+        hid = BatchNormalization(momentum=0.8)(hid)
+        hid = LeakyReLU(alpha=0.2)(hid) # -> 32
+        hid = Multiply()([hid, con1])
+
+
+        hid = Conv2D(n_channel, kernel_size=kernel_size, strides=2, padding="same")(hid)
+        hid = BatchNormalization(momentum=0.8)(hid)
+        hid = LeakyReLU(alpha=0.2)(hid) # -> 64
+
+        hid = Conv2D(n_channel, kernel_size=kernel_size, strides=2, padding="same")(hid)
+        hid = BatchNormalization(momentum=0.8)(hid)
+        hid = LeakyReLU(alpha=0.2)(hid) # -> 32
+
+        hid = Conv2D(n_channel, kernel_size=kernel_size, strides=2, padding="same")(hid)
+        hid = BatchNormalization(momentum=0.8)(hid)
+        hid = LeakyReLU(alpha=0.2)(hid) # -> 16
+
+        hid = Conv2D(n_channel, kernel_size=kernel_size, strides=2, padding="same")(hid)
+        hid = BatchNormalization(momentum=0.8)(hid)
+        hid = LeakyReLU(alpha=0.2)(hid) # -> 8
 
         hid = Flatten()(hid)
 
-        hid = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(hid)
+        hid = Dropout(0.1)(hid)
 
-        con1 = Dense(12, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con)
-        con1 = Dense(25, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
-        con1 = Dense(50, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
-        con1 = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(con1)
-
-        merged_layer = Concatenate()([hid, con1])
-        merged_layer = Dropout(0.1)(merged_layer) ####NEW
-        # -> 200
-
-        merged_layer = Dense(100, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_layer)
-        merged_layer = Dense(50, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_layer)
-        merged_layer = Dense(25, activation='tanh', kernel_regularizer=regularizers.l2(0.01))(merged_layer)
-
-        out = Dense(1, activation='sigmoid')(merged_layer)
-        # -> 1
+        out = Dense(1, activation='sigmoid')(hid)
 
         model = Model(inputs=[img, con], outputs=out)
         model.summary()
@@ -299,37 +340,23 @@ class binary_CGAN():
 
             gen_imgs = self.generator.predict([noise, labels, ones, half])
 
-            # NOTE GET NOISE LABEL VECTORS
-            p_flip = 0.02
-            noise_range = 0.1
-            valid_noisy  = np.array([random.uniform(1.-noise_range,1.) if (random.uniform(0,1)<1.-p_flip) else random.uniform(0.,noise_range) for _ in range(batch_size)])
-            fake_noisy  = np.array([random.uniform(0.,noise_range) if (random.uniform(0,1)<1.-p_flip) else random.uniform(1.-noise_range,1.) for _ in range(batch_size)])
-
-            imgs = imgs + np.random.normal(0, 0.05, size=imgs.shape)
-            gen_imgs = gen_imgs + np.random.normal(0, 0.05, size=imgs.shape)
-
-
             #Train the discriminator
             #if (epoch < 200) and (epoch%5!=0):
-            if last_acc > 0.8 and 1==2:
-                print('Only testing discriminator')
-                d_loss_real = self.discriminator.test_on_batch([imgs, labels], valid_noisy)
-                d_loss_fake = self.discriminator.test_on_batch([gen_imgs, labels], fake_noisy)
-                d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
-            else:
-                d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid_noisy)
-                d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake_noisy)
-                d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
+
+            print('dis')
+            d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid)
+            d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake)
+            d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
 
-            idx = np.random.randint(0, self.imgs.shape[0], batch_size)
-            sampled_labels = self.labels[idx] #sample random labels from the data for training the generator
 
             # Train the generator
-            if last_acc < 0.7 and 1==2:
-                print('Only testing generator')
-                g_loss = self.combined.test_on_batch([noise, sampled_labels, ones, half], valid)
-            else:
+
+            for i in range(1+(d_loss[1]>0.8)*4):
+                noise = np.random.normal(0, 1, (batch_size, 100))
+                idx = np.random.randint(0, self.imgs.shape[0], batch_size)
+                sampled_labels = self.labels[idx] #sample random labels from the data for training the generator
+                print('gen')
                 g_loss = self.combined.train_on_batch([noise, sampled_labels, ones, half], valid)
 
             # Plot the progress
@@ -503,7 +530,7 @@ class combined_CGAN():
     def read_data(self):
 
         #data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
-        data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
+        data = pkl.load(open(r"D:\\Outputs\\slices2_128.pkl", "rb"))
 
         self.imgs = []
         self.labels = []
@@ -941,8 +968,6 @@ class combined_CGAN():
             fig.savefig("images/%d.png" % epoch)
         plt.close()
 
-
-
 if __name__ == '__main__':
 
     args = sys.argv
@@ -950,20 +975,67 @@ if __name__ == '__main__':
         if args[2] == 'binary':
             if args[1] == 'new':
                 bcgan = binary_CGAN(use_old_model=False)
-                bcgan.train(epochs=400000, batch_size=4, sample_interval=100, save_model_interval = 500)
+                bcgan.train(epochs=400000, batch_size=32, sample_interval=100, save_model_interval = 500)
             elif args[1] == 'continue':
                 bcgan = binary_CGAN(use_old_model=True)
-                bcgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
+                bcgan.train(epochs=400000, batch_size=32, sample_interval=50, save_model_interval = 500)
             else:
                 print('argument not recognised')
 
         elif args[2] == 'combined':
             if args[1] == 'new':
                 ccgan = combined_CGAN(use_old_model=False)
-                ccgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval=500)
+                ccgan.train(epochs=400000, batch_size=32, sample_interval=50, save_model_interval=500)
             else:
                 print('WHUUUUUUU HAHAHAHA')
         else:
             print('argument not recognised')
     else:
         print('2 arguments required: (new,continue) (binary, combined)')
+
+
+'''
+
+#%%
+
+def binary_search_nearest_distance(distance, distances):
+    best_delta = np.inf
+    best_d = None
+    for d in distances:
+        if np.abs(d-distance) < best_delta:
+            best_delta = np.abs(d-distance)
+            best_d = d
+    return best_d
+import matplotlib.pyplot as plt
+import numpy as np
+
+data = {
+'A': [100, 117, 200],
+'B': [50, 30, 108],
+'C': [10,300,72]
+}
+
+for planet in data:
+    data[planet] = sorted(data[planet])
+
+best_loss = np.inf
+best_distance = None
+losses = []
+for distance in range(300):
+
+    loss = 0
+    for planet in data:
+        planet_distances = data[planet]
+        nearest_distance = binary_search_nearest_distance(distance, planet_distances)
+
+        loss += abs(nearest_distance - distance) / nearest_distance # or something similar depending on goal...
+
+    if loss < best_loss:
+        best_loss = loss
+        best_distance = distance
+
+    losses.append(loss)
+
+plt.plot(losses)
+plt.show()
+'''

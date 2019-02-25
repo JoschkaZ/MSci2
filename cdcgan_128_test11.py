@@ -509,19 +509,11 @@ if __name__ == '__main__':
     if args[1] == 'new':
         cgan = CGAN(use_old_model=False)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-<<<<<<< HEAD
-        cgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
-    elif args[1] == 'continue':
-        cgan = CGAN(use_old_model=True)
-        #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
-        cgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
-=======
         cgan.train(epochs=400000, batch_size=32, sample_interval=50, save_model_interval = 500)
     elif args[1] == 'continue':
         cgan = CGAN(use_old_model=True)
         #cgan.train(epochs=20000, batch_size=128, sample_interval=10, save_model_interval = 100)
         cgan.train(epochs=400000, batch_size=32, sample_interval=50, save_model_interval = 500)
->>>>>>> 43c3e4b20e75fa1c4a711102452cdc9a66e91410
     else:
         print('Argument required.')
         print('write: "python cdcgan_21cm_256.py new" to use a new model.')
