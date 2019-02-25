@@ -17,10 +17,13 @@ import pickle as pkl
 import copy
 import random
 import stats_utils
+import tensorflow as tf
+import matplotlib as mpl
 
 
 
 generator = load_model(r'/home/hk2315/MSci2/models/21256generator_1550323874.h5')
+
 
 def read_data():
 
@@ -94,191 +97,273 @@ def min_max_scale_images(imgs):
     imgs = np.expand_dims(imgs, axis=3)
     #print('_______________',imgs.shape)
 
-    return imgs
+    return imgs, mmax, mmin
 
 
-imgs, labels, real_imgs_index = read_data()
+def make_table():
+    imgs, labels, real_imgs_index = read_data()
 
-imgs = min_max_scale_images(imgs)
+    imgs, mmax, mmin = min_max_scale_images(imgs)
 
-sample_at0 = [
-[7.],
-[8.],
-[9.],
-[10.],
-[11.]
-]
-r = len(sample_at0)
-c = 5
+    sample_at0 = [
+    [7.],
+    [8.],
+    [9.],
+    [10.],
+    [11.]
+    ]
+    r = len(sample_at0)
+    c = 5
 
-temp_copy = copy.deepcopy(sample_at0)
+    temp_copy = copy.deepcopy(sample_at0)
 
-sample_at0 = np.array(sample_at0)
-sample_at = scale_labels(sample_at0)
-print('sampling images at labels:', sample_at)
+    sample_at0 = np.array(sample_at0)
+    sample_at = scale_labels(sample_at0)
+    print('sampling images at labels:', sample_at)
 
-noise = np.random.normal(0, 1, (len(sample_at), 100))
+    noise = np.random.normal(0, 1, (len(sample_at), 100))
 
-gen_imgs = generator.predict([noise, sample_at])
+    gen_imgs = generator.predict([noise, sample_at])
 
-fig1 = plt.figure(figsize=(25,20), constrained_layout=False)
-widths = [1, 1, 1, 1, 1]
-heights = [1, 1, 1, 1, 1]
-spec1 = fig1.add_gridspec(ncols=c, nrows=r, width_ratios=widths, height_ratios=heights)
-plt.subplots_adjust(wspace=0.3, hspace=0.3)
+    fig1 = plt.figure(figsize=(25,20), constrained_layout=False, dpi=300)
+    widths = [1, 1, 1, 1, 1]
+    heights = [1, 1, 1, 1, 1]
+    spec1 = fig1.add_gridspec(ncols=c, nrows=r, width_ratios=widths, height_ratios=heights)
+    plt.subplots_adjust(wspace=0.5, hspace=0.5)
 
-for i in range(r):
-    for j in range(c):
+    for i in range(r):
+        for j in range(c):
 
-        if j == 0: #show a real image
-            #print(temp_copy[i][0])
-            #print(self.real_imgs_index.keys())
-            ax = fig1.add_subplot(spec1[i, j])
-            if temp_copy[i][0] in real_imgs_index: #real images for that z are available
+            if j == 0: #show a real image
+                #print(temp_copy[i][0])
+                #print(self.real_imgs_index.keys())
+                ax = fig1.add_subplot(spec1[i, j])
+                if temp_copy[i][0] in real_imgs_index: #real images for that z are available
 
-                sample_i = random.randint(0,len(real_imgs_index[temp_copy[i][0]])-1)
-                #print(self.real_imgs_index[temp_copy[i][0]])
-                sample_i = real_imgs_index[temp_copy[i][0]][sample_i]
-                #print(sample_i)
-                #print(self.imgs.shape)
-                #print(imgs.shape)
-                ax.imshow(imgs[sample_i,:,:,0], cmap='hot', clim=(-1,1))
-                #ax.set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in temp_copy[i]))
+                    sample_i = random.randint(0,len(real_imgs_index[temp_copy[i][0]])-1)
+                    #print(self.real_imgs_index[temp_copy[i][0]])
+                    sample_i = real_imgs_index[temp_copy[i][0]][sample_i]
+                    #print(sample_i)
+                    #print(self.imgs.shape)
+                    #print(imgs.shape)
+
+                    ax.imshow(imgs[sample_i,:,:,0], cmap='hot', clim=(-1,1))
+                    #ax.set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in temp_copy[i]))
+                    ax.axis('off')
+                    print('real_min',np.min(imgs[sample_i,:,:,0]))
+                    print('real min before scaling', mmin)
+                    print('real_max',np.max(imgs[sample_i,:,:,0]))
+                    print('real max before scaling', mmax)
                 ax.axis('off')
-                print('real_min',np.min(imgs[sample_i,:,:,0]))
-                print('real_max',np.max(imgs[sample_i,:,:,0]))
-            ax.axis('off')
 
-        if j == 1:
-            ax = fig1.add_subplot(spec1[i, j])
-            ax.imshow(gen_imgs[i,:,:,0], cmap='hot', clim=(-1,1))
-            #axs[i,j].set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in temp_copy[i]))
-            ax.axis('off')
-            print('fake_min',np.min(gen_imgs[i,:,:,0]))
-            print('fake_max',np.max(gen_imgs[i,:,:,0]))
-            #cnt += 1
+            if j == 1:
+                ax = fig1.add_subplot(spec1[i, j])
+                ax.imshow(gen_imgs[i,:,:,0], cmap='hot', clim=(-1,1))
+                #axs[i,j].set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in temp_copy[i]))
+                ax.axis('off')
+                print('fake_min',np.min(gen_imgs[i,:,:,0]))
+                print('fake_max',np.max(gen_imgs[i,:,:,0]))
+                #cnt += 1
 
-        if j == 2:
-            if temp_copy[i][0] in real_imgs_index: #real images for that z are available
+            if j == 2:
+                #pixel value
+                ave_pv_from = 10 ###10
+
                 ax = fig1.add_subplot(spec1[i, j])
                 print(imgs.shape)
                 #intv = int(len(real_imgs_index[temp_copy[i][0]])/5)###100
-                idx = np.random.randint(0, len(real_imgs_index[temp_copy[i][0]])-1, 10)
+                idx = np.random.randint(0, len(real_imgs_index[temp_copy[i][0]])-1, ave_pv_from)
                 index_list = np.array(real_imgs_index[temp_copy[i][0]])[idx]
                 real_imgs = imgs[index_list]
                 real_pix_val = stats_utils.get_pixel_val(real_imgs)
 
 
-                noise = np.random.normal(0, 1, (10, 100))###5
+                noise = np.random.normal(0, 1, (ave_pv_from, 100))###5
                 mal = max(real_imgs_index.keys())
                 mil = min(real_imgs_index.keys())
-                z_vec = np.array([[temp_copy[i][0]]]*10)###100
+                z_vec = np.array([[temp_copy[i][0]]]*ave_pv_from)###100
                 z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
-                gen_imgs2 = generator.predict([noise, np.reshape(z_vec,(10,1))])
+                gen_imgs2 = generator.predict([noise, np.reshape(z_vec,(ave_pv_from,1))])
                 fake_pix_val = stats_utils.get_pixel_val(gen_imgs2)
 
-
+                x2 = np.arange(-1., 1., 0.399)
+                print(x2)
+                my_ticks = [str(np.round((x+1)*mmax/2,1)) for x in x2]
+                ax.set_xticks(x2, my_ticks)
+                plt.xticks(x2, my_ticks)
                 ax.hist(real_pix_val, range=(-1,1), bins=100, color="blue", label="real", alpha=0.7)
                 ax.hist(fake_pix_val, range=(-1,1), bins=100, color="orange", label="fake", alpha=0.7)
-                plt.xlabel('Pixel value', fontsize=10)
-                plt.ylabel('Pixel Count', fontsize=10)
-                ax.legend()
+                plt.xlabel('Pixel value', fontsize=20)
+                plt.ylabel('Pixel Count', fontsize=20)
+                ax.legend(prop={'size': 15})
 
-        if j == 3:
-            ax = fig1.add_subplot(spec1[i, j])
+            if j == 3:
+                #power spectrum
+                ave_ps_from = 100 ###100
 
-            idx = np.random.randint(0, len(real_imgs_index[temp_copy[i][0]])-1, 100)
-            index_list = np.array(real_imgs_index[temp_copy[i][0]])[idx]
-            real_imgs = imgs[index_list]
-            real_imgs = np.squeeze(real_imgs)
-            real_ave_ps, real_ps_std, k_list_real = stats_utils.produce_average_ps(real_imgs)
+                ax = fig1.add_subplot(spec1[i, j])
 
-            noise = np.random.normal(0, 1, (100, 100))###100
-            mal = max(real_imgs_index.keys())
-            mil = min(real_imgs_index.keys())
-            z_vec = np.array([[temp_copy[i][0]]]*100)###100
-            z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
-            gen_imgs2 = generator.predict([noise, np.reshape(z_vec,(100,1))])###100
-            gen_imgs2 = np.squeeze(gen_imgs2)
-            fake_ave_ps, fake_ps_std, k_list_fake = stats_utils.produce_average_ps(gen_imgs2)
+                idx = np.random.randint(0, len(real_imgs_index[temp_copy[i][0]])-1, ave_ps_from)
+                index_list = np.array(real_imgs_index[temp_copy[i][0]])[idx]
+                real_imgs = imgs[index_list]
+                real_imgs = np.squeeze(real_imgs)
+                real_ave_ps, real_ps_std, k_list_real = stats_utils.produce_average_ps(real_imgs)
 
-            ax.errorbar(x=k_list_fake[10:], y=fake_ave_ps[10:], yerr=fake_ps_std[10:], alpha=0.5, label="fake")
-            ax.set_yscale('log')
-            ax.plot(k_list_real[10:], real_ave_ps[10:], label="real")
-            ax.set_yscale('log')
-            plt.xlabel(r'Frequency[Mpc' + str(r'$^{-1}$') + r']', fontsize=10)
-            plt.ylabel(r'Power[Mpc' + str(r'$^{-2}$') + r']', fontsize=10)
-            ax.legend()
+                noise = np.random.normal(0, 1, (ave_ps_from, 100))###100
+                mal = max(real_imgs_index.keys())
+                mil = min(real_imgs_index.keys())
+                z_vec = np.array([[temp_copy[i][0]]]*ave_ps_from)###100
+                z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
+                gen_imgs2 = generator.predict([noise, np.reshape(z_vec,(ave_ps_from,1))])###100
+                gen_imgs2 = np.squeeze(gen_imgs2)
+                fake_ave_ps, fake_ps_std, k_list_fake = stats_utils.produce_average_ps(gen_imgs2)
 
-        if j == 4:
-            ax = fig1.add_subplot(spec1[i, j])
+                ax.errorbar(x=k_list_fake[10:], y=fake_ave_ps[10:], yerr=fake_ps_std[10:], color='orange', alpha=0.5, label="fake")
+                ax.set_yscale('log')
+                ax.plot(k_list_real[10:], real_ave_ps[10:], color='blue', label="real")
+                ax.set_yscale('log')
+                plt.xlabel(r'Frequency[Mpc' + str(r'$^{-1}$') + r']', fontsize=20)
+                plt.ylabel(r'Power[Mpc' + str(r'$^{-2}$') + r']', fontsize=20)
+                ax.legend(prop={'size': 15})
 
-            idx = np.random.randint(0, len(real_imgs_index[temp_copy[i][0]])-1, 10)
-            index_list = np.array(real_imgs_index[temp_copy[i][0]])[idx]
-            real_imgs = imgs[index_list]
-            rl_brightness_list = stats_utils.get_peak_vs_brightness(real_imgs)
+            if j == 4:
+                #peak brightness
+                ave_pb_from = 10 ###10
 
-            noise = np.random.normal(0, 1, (10, 100))
-            mal = max(real_imgs_index.keys())
-            mil = min(real_imgs_index.keys())
-            z_vec = np.array([[temp_copy[i][0]]]*10)
-            z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
-            gen_imgs2 = generator.predict([noise, np.reshape(z_vec,(10,1))])
-            fk_brightness_list = stats_utils.get_peak_vs_brightness(gen_imgs2)
+                ax = fig1.add_subplot(spec1[i, j])
 
-            ax.hist(rl_brightness_list, bins=100, color="blue", label="real", alpha=0.7)
-            ax.hist(fk_brightness_list, bins=100, color="orange", label="fake", alpha=0.7)
-            plt.xlabel('Pixel value', fontsize=10)
-            plt.ylabel('Pixel count', fontsize=10)
-            ax.legend()
+                idx = np.random.randint(0, len(real_imgs_index[temp_copy[i][0]])-1, ave_pb_from)
+                index_list = np.array(real_imgs_index[temp_copy[i][0]])[idx]
+                real_imgs = imgs[index_list]
+                rl_brightness_list = stats_utils.get_peak_vs_brightness(real_imgs)
 
-        #ax = fig1.add_subplot(spec1[row, col])
-        #label = 'Width: {}\nHeight: {}'.format(widths[col], heights[row])
-        #ax.annotate(label, (0.1, 0.5), xycoords='axes fraction', va='center')
+                noise = np.random.normal(0, 1, (ave_pb_from, 100))
+                mal = max(real_imgs_index.keys())
+                mil = min(real_imgs_index.keys())
+                z_vec = np.array([[temp_copy[i][0]]]*ave_pb_from)
+                z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
+                gen_imgs2 = generator.predict([noise, np.reshape(z_vec,(ave_pb_from,1))])
+                fk_brightness_list = stats_utils.get_peak_vs_brightness(gen_imgs2)
+
+                x2 = np.arange(-1., 1., 0.399)
+                print(x2)
+                my_ticks = [str(np.round((x+1)*mmax/2,1)) for x in x2]
+                ax.set_xticks(x2, my_ticks)
+                plt.xticks(x2, my_ticks)
+                ax.hist(rl_brightness_list, range=(-1,1), bins=100, color="blue", label="real", alpha=0.7)
+                ax.hist(fk_brightness_list, range=(-1,1), bins=100, color="orange", label="fake", alpha=0.7)
+                plt.xlabel('Pixel value', fontsize=20)
+                plt.ylabel('Pixel count', fontsize=20)
+                ax.legend(prop={'size': 15})
+
+    fig1.savefig("images/all_stats.png")
+    plt.close()
+
+
+def make_cb():
+    fig, ax = plt.subplots(figsize=(6, 1), dpi=300)
+    fig.subplots_adjust(bottom=0.5)
+
+    cmap = mpl.cm.hot
+    norm = mpl.colors.Normalize(vmin=mmin, vmax=mmax)
+
+    cb1 = mpl.colorbar.ColorbarBase(ax, cmap=cmap,
+                                    norm=norm,
+                                    orientation='horizontal')
+    cb1.set_label('Brightness temperature[mK]', fontsize=20)
+    fig.savefig("images/colourbar.png", bbox_inches = "tight")
+    plt.close()
 
 
 
-"""
-fig, axs = plt.subplots(r, c, figsize=(4,10), dpi=250)
-#cnt = 0
-for i in range(r):
-    for j in range(c): # c=0: fake, c=1, real
+def make_cor_fig():
+    z_list = [7,8,9,10,11]
+    for z in z_list:
+        #make = True
+        #count = 0
+        noise = np.random.normal(0, 1, (100, 100))###100
+        mal = max(real_imgs_index.keys())
+        mil = min(real_imgs_index.keys())
+        z_vec = np.array([[z]]*100)###100
+        z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
+        gen_imgs2 = generator.predict([noise, np.reshape(z_vec,(100,1))])###100
+        gen_imgs2 = np.squeeze(gen_imgs2)
 
-        if j == 0: #show a real image
-            #print(temp_copy[i][0])
-            #print(self.real_imgs_index.keys())
-            if temp_copy[i][0] in real_imgs_index: #real images for that z are available
+        cor = True
+        for iii,s42 in enumerate(gen_imgs2):
+                    for jjj,s43 in enumerate(gen_imgs2):
+                        if cor == True:
+                            if iii == 10 and jjj == 10:
+                                S, Sconv, k_list_cross = stats_utils.crossraPsd2d(s42,s43)
+                                #if make == True:
+                                plt.plot(k_list_cross[1:], Sconv[1:], 'r--', label='Correlated')
+                                cor = False
 
-                sample_i = random.randint(0,len(real_imgs_index[temp_copy[i][0]])-1)
-                #print(self.real_imgs_index[temp_copy[i][0]])
-                sample_i = real_imgs_index[temp_copy[i][0]][sample_i]
-                #print(sample_i)
-                #print(self.imgs.shape)
-                #print(imgs.shape)
-                axs[i,j].imshow(imgs[sample_i,:,:,0], cmap='hot', clim=(-1,1))
-                axs[i,j].set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in temp_copy[i]))
-                axs[i,j].axis('off')
-                print('real_min',np.min(imgs[sample_i,:,:,0]))
-                print('real_max',np.max(imgs[sample_i,:,:,0]))
-            axs[i,j].axis('off')
+                        if iii != jjj and iii % 10 == 0 and jjj % 5 == 0 and jjj>iii:
+                            print(iii)
+                            S, Sconv, k_list_cross = stats_utils.crossraPsd2d(s42,s43)
+                            #if make == True:
 
-        if j == 1:
-            axs[i,j].imshow(gen_imgs[i,:,:,0], cmap='hot', clim=(-1,1))
-            #axs[i,j].set_title("Labels: %s" % '_'.join(str(np.round(e,3)) for e in temp_copy[i]))
-            axs[i,j].axis('off')
-            print('fake_min',np.min(gen_imgs[i,:,:,0]))
-            print('fake_max',np.max(gen_imgs[i,:,:,0]))
-            #cnt += 1
+                            plt.plot(k_list_cross[1:], Sconv[1:], alpha=0.2)
 
-        if j ==2:
-            if temp_copy[i][0] in real_imgs_index: #real images for that z are available
-                print(imgs.shape)
-                fake_pix_val = stats_utils.get_pixel_val(gen_imgs[[i],:,:,:])
-                real_pix_val = stats_utils.get_pixel_val(imgs[[sample_i],:,:,:])
-                axs[i,j].hist(real_pix_val, range=(-1,1), bins=100, color="blue", label="real", alpha=0.7)
-                axs[i,j].hist(fake_pix_val, range=(-1,1), bins=100, color="orange", label="fake", alpha=0.7)
-                axs[i,j].legend()
-"""
+        plt.savefig("images/cross_%d.png" % z)
+        plt.close()
 
-fig1.savefig("images/all_stats.png")
-plt.close()
+
+def make_ps_ave_models():
+    imgs, labels, real_imgs_index = read_data()
+    imgs, mmax, mmin = min_max_scale_images(imgs)
+    ps_ave_from_models = pkl.load(open("/home/hk2315/MSci2/models/ps_ave_from_models.pkl", "rb"))
+    k_list = ps_ave_from_models['k_list']
+    z_dict = {}
+
+    r = 5
+    c = 1
+    fig, axs = plt.subplots(r, c, figsize=(4,18))
+    cnt = 0
+    for z in range(7,12):
+        z_lists = ps_ave_from_models[z]
+        values_list = [ [] for i in range(len(z_lists[0])) ] #list of empty lists
+        std_list = []
+        ps = np.zeros(len(z_lists[0]))
+        print(len(z_lists))
+
+        for l in range(len(z_lists)):
+            s = z_lists[l]
+            ps = np.add(ps,s)
+            for j in range(len(s)):
+                values_list[j].append(s[j])
+        ps = ps/(len(z_lists))
+
+        for k in range(len(values_list)):
+            std = np.std(values_list[k])
+            std = std/np.sqrt(len(values_list[k]))
+            std_list.append(std)
+
+        #z_dict[z] = [ps]
+        #z_dict[z].append(std_list)
+
+        idx = np.random.randint(0, len(real_imgs_index[z])-1, 10)
+        index_list = np.array(real_imgs_index[z])[idx]
+        real_imgs = imgs[index_list]
+        real_imgs = np.squeeze(real_imgs)
+        real_ave_ps, real_ps_std, k_list_real = stats_utils.produce_average_ps(real_imgs)
+
+        print(len(k_list))
+        print(len(ps))
+        #print(len(std))
+
+        axs[cnt].errorbar(x=k_list[10:], y=ps[10:], yerr=std_list[10:], color='orange', label='Fake') ###fix
+        axs[cnt].set_yscale('log')
+        axs[cnt].plot(k_list_real[10:], real_ave_ps[10:], color='blue', label="real")
+        axs[cnt].set_yscale('log')
+        axs[cnt].set_title("Labels: %d" % z)
+        axs[cnt].legend()
+        cnt += 1
+    fig.savefig("images/ps_ave_from_models.png", bbox_inches = "tight")
+    plt.close()
+
+
+
+make_table()
+make_ps_ave_models()
