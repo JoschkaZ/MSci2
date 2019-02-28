@@ -92,8 +92,8 @@ class CGAN():
     def read_data(self):
 
         print('importing data...')
-        data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
-        #data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+        #data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
+        data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
         print('data imported!')
 
         self.imgs = []
