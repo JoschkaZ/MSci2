@@ -9,9 +9,10 @@ import time
 
 #zip_name = 'single_redshift'
 
+
 seeds = range(100)
-ZSTART = 11
-ZEND = 7
+ZSTART = 9
+ZEND = 5
 ZSTEP = -1
 ZETA_X = 'default'
 
