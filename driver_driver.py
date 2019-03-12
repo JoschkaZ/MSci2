@@ -22,23 +22,25 @@ ZETA_Xs = np.array([2.0e56/4, 2.0e56/2, 2.0e56, 2.0e56*2, 2.0e56*4])
 print('ZETA_X: ', ZETA_Xs)
 
 for SEED in seeds:
-    print('###################################################################')
-    print('###################################################################')
-    print('###################################################################')
-    start_time = time.time()
-
-    print('using seed ', SEED)
-
-    #clean box folder
-    utils.clear_box_directory()
-
-    #remove compiled files
-    utils.cd_to_programs()
-    commands = ['make clean']
-    utils.run_commands(commands)
-
     for ZETA_X in ZETA_Xs:
         print('ZETA_X: ', ZETA_X)
+        print('###################################################################')
+        print('###################################################################')
+        print('###################################################################')
+        start_time = time.time()
+
+        print('using seed ', SEED)
+
+        #clean box folder
+        utils.clear_box_directory()
+
+        #remove compiled files
+        utils.cd_to_programs()
+        commands = ['make clean']
+        utils.run_commands(commands)
+
+
+
         #change some parameters
         utils.change_parameter('ZETA_X', ZETA_X)
         utils.change_parameter('RANDOM_SEED', str(SEED))
@@ -51,23 +53,23 @@ for SEED in seeds:
         commands = ['make', './drive_zscroll_noTs']
         utils.run_commands(commands)
 
-    #rename and zip all delta_T_boxes
-    # box name is: parameter_string + '_' + old_boxname
-    utils.cd_to_boxes()
-    box_names = utils.get_delta_T_boxes()
-    box_names_density = utils.get_deltax_boxes()
+        #rename and zip all delta_T_boxes
+        # box name is: parameter_string + '_' + old_boxname
+        utils.cd_to_boxes()
+        box_names = utils.get_delta_T_boxes()
+        box_names_density = utils.get_deltax_boxes()
 
-    param_string = 'SEED'+str(SEED)+'_ZSTART'+str(ZSTART)+'_ZEND'+str(ZEND)+'_ZSTEP'+str(ZSTEP)+'_ZETA_X'+str(ZETA_X)
-    box_names = utils.rename_boxes(box_names, param_string)
-    box_names_density = utils.rename_boxes(box_names_density, param_string)
+        param_string = 'SEED'+str(SEED)+'_ZSTART'+str(ZSTART)+'_ZEND'+str(ZEND)+'_ZSTEP'+str(ZSTEP)+'_ZETA_X'+str(ZETA_X)
+        box_names = utils.rename_boxes(box_names, param_string)
+        box_names_density = utils.rename_boxes(box_names_density, param_string)
 
-    #name archive
-    # archive name is: data + '_' + parameter_string
-    archive_name = str(datetime.datetime.now()).replace(' ','_').replace(':','#').replace('.','#')+'_'+param_string
-    utils.zip_boxes(box_names, archive_name)
+        #name archive
+        # archive name is: data + '_' + parameter_string
+        archive_name = str(datetime.datetime.now()).replace(' ','_').replace(':','#').replace('.','#')+'_'+param_string
+        utils.zip_boxes(box_names, archive_name)
 
-    archive_name_density = 'density_'+str(datetime.datetime.now()).replace(' ','_').replace(':','#').replace('.','#')+'_'+param_string
-    utils.zip_boxes(box_names_density, archive_name_density)
+        archive_name_density = 'density_'+str(datetime.datetime.now()).replace(' ','_').replace(':','#').replace('.','#')+'_'+param_string
+        utils.zip_boxes(box_names_density, archive_name_density)
 
-    print('ITERATION FINISHED')
-    print('T = ', time.time() - start_time, 's')
+        print('ITERATION FINISHED')
+        print('T = ', time.time() - start_time, 's')
