@@ -83,6 +83,60 @@ def crossraPsd2d(img1,img2,show=False):
     return S,Sconv,k_list
 
 
+def xps(img1, img2, show=False):
+    # get averaged power spectral density of image with resolution res
+    img_width = img1.shape[0]
+    #print('img width',int(img_width/2))
+
+    #compute power spectrum
+    imgf1 = np.fft.fft2(img1)
+    imgfs1 = np.fft.fftshift(imgf1)
+    imgf2 = np.fft.fft2(img2)
+    imgfs2 = np.fft.fftshift(imgf2)
+    imgfs2 = np.conjugate(imgfs2)
+    imgfsp = imgfs1 * imgfs2
+    #print(np.shape(imgfsp))
+
+    S = np.zeros(int(img_width/2))
+    C = np.zeros(int(img_width/2))
+    k_list = []
+    for i in range(int(img_width)):
+        for j in range(int(img_width)):
+
+            i2 = i - (float(img_width)-1)/2.
+            j2 = j - (float(img_width)-1)/2.
+
+            r = int(np.round(np.sqrt(i2**2+j2**2)))
+
+
+            if r <= (int(img_width/2)-1):
+                S[r] += imgfsp[i][j]
+                C[r] += 1
+    physical_width = (img_width/256)*300
+    for i in range(int(img_width/2)):
+        k = i*(1.*2*np.pi/physical_width)
+        if C[i] == 0:
+            S[i] = 0
+        else:
+            S[i] = k**2 * S[i] / C[i]
+
+        k_list.append(k)
+
+    if show == True:
+        print('Original')
+        plt.imshow(np.log(np.abs(img)), cmap='hot', interpolation='nearest')
+        plt.show()
+        print('Fourier')
+        plt.imshow(np.log(np.abs(imgf)), cmap='hot', interpolation='nearest')
+        plt.show()
+        print('Fourier + Shift')
+        plt.imshow(np.log(np.abs(imgfs)), cmap='hot', interpolation='nearest')
+        plt.show()
+        print('Fourier + Shift + Squared')
+        plt.imshow(np.log(np.abs(imgfsp)), cmap='hot', interpolation='nearest')
+        plt.show()
+
+    return S,k_list
 
 
 def raPsd2d(img, res, show=False):
