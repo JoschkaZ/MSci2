@@ -20,16 +20,21 @@ import stats_utils
 import tensorflow as tf
 import matplotlib as mpl
 
+choose = 711
+#choose = 59
 
-
-generator = load_model(r'/home/hk2315/MSci2/models/21256generator_1550323874.h5')
+if choose == 711:
+    generator = load_model(r'/home/hk2315/cdcgan_bu/models_test11_no9/21256generator_1550767593.h5')
 
 
 def read_data():
 
     print('importing data...')
     #data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
-    data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+    if choose == 711:
+        data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+    if choose == 59:
+        data = pkl.load(open("/home/jz8415/128_all.pkl", "rb"))
     print('data imported!')
 
     imgs = []
@@ -102,16 +107,25 @@ def min_max_scale_images(imgs):
 
 def make_table():
     imgs, labels, real_imgs_index = read_data()
-
     imgs, mmax, mmin = min_max_scale_images(imgs)
 
-    sample_at0 = [
-    [7.],
-    [8.],
-    [9.],
-    [10.],
-    [11.]
-    ]
+    if choose == 711:
+        sample_at0 = [
+        [7.],
+        [8.],
+        [9.],
+        [10.],
+        [11.]
+        ]
+    if choose == 59:
+        sample_at0 = [
+        [5.],
+        [6.],
+        [7.],
+        [8.],
+        [9.]
+        ]
+
     r = len(sample_at0)
     c = 5
 
@@ -217,6 +231,7 @@ def make_table():
                 gen_imgs2 = generator.predict([noise, np.reshape(z_vec,(ave_ps_from,1))])###100
                 gen_imgs2 = np.squeeze(gen_imgs2)
                 fake_ave_ps, fake_ps_std, k_list_fake = stats_utils.produce_average_ps(gen_imgs2)
+                fake_ps_std = fake_ps_std/(np.sqrt(ave_ps_from))
 
                 ax.errorbar(x=k_list_fake[10:], y=fake_ave_ps[10:], yerr=fake_ps_std[10:], color='orange', alpha=0.5, label="fake")
                 ax.set_yscale('log')
@@ -256,11 +271,14 @@ def make_table():
                 plt.ylabel('Pixel count', fontsize=20)
                 ax.legend(prop={'size': 15})
 
-    fig1.savefig("images/all_stats.png")
+    fig1.savefig("images/all_stats_%d.png" % choose)
     plt.close()
 
 
 def make_cb():
+    imgs, labels, real_imgs_index = read_data()
+    imgs, mmax, mmin = min_max_scale_images(imgs)
+
     fig, ax = plt.subplots(figsize=(6, 1), dpi=300)
     fig.subplots_adjust(bottom=0.5)
 
@@ -271,13 +289,19 @@ def make_cb():
                                     norm=norm,
                                     orientation='horizontal')
     cb1.set_label('Brightness temperature[mK]', fontsize=20)
-    fig.savefig("images/colourbar.png", bbox_inches = "tight")
+    fig.savefig("images/colourbar_%d.png" % choose, bbox_inches = "tight")
     plt.close()
 
 
 
 def make_cor_fig():
-    z_list = [7,8,9,10,11]
+    imgs, labels, real_imgs_index = read_data()
+    imgs, mmax, mmin = min_max_scale_images(imgs)
+
+    if choose == 711:
+        z_list = [7,8,9,10,11]
+    if choose == 59:
+        z_list = [5,6,7,8,9]
     for z in z_list:
         #make = True
         #count = 0
@@ -289,31 +313,42 @@ def make_cor_fig():
         gen_imgs2 = generator.predict([noise, np.reshape(z_vec,(100,1))])###100
         gen_imgs2 = np.squeeze(gen_imgs2)
 
+        y_list = []
         cor = True
         for iii,s42 in enumerate(gen_imgs2):
                     for jjj,s43 in enumerate(gen_imgs2):
                         if cor == True:
                             if iii == 10 and jjj == 10:
-                                S, Sconv, k_list_cross = stats_utils.crossraPsd2d(s42,s43)
+                                Sconv, k_list_cross = stats_utils.xps(s42,s43)
                                 #if make == True:
-                                plt.plot(k_list_cross[1:], Sconv[1:], 'r--', label='Correlated')
+                                plt.plot(k_list_cross[2:], Sconv[2:], 'r--', label='Correlated')
                                 cor = False
 
                         if iii != jjj and iii % 10 == 0 and jjj % 5 == 0 and jjj>iii:
                             print(iii)
-                            S, Sconv, k_list_cross = stats_utils.crossraPsd2d(s42,s43)
+                            Sconv, k_list_cross = stats_utils.xps(s42,s43)
                             #if make == True:
-
-                            plt.plot(k_list_cross[1:], Sconv[1:], alpha=0.2)
-
-        plt.savefig("images/cross_%d.png" % z)
+                            #plt.plot(k_list_cross[2:], Sconv[2:], alpha=0.2)
+                            y_list.append(Sconv)
+        y_list = np.array(y_list)
+        y = np.mean(y_list, axis=0)
+        error = np.std(y_list, axis=0)
+        error = error / (np.sqrt(len(y_list)))
+        plt.errorbar(x=k_list_cross[2:], y=Sconv[2:], yerr=error[2:])
+        plt.savefig("images/cross_%d_%d.png" % (z,choose))
         plt.close()
 
 
 def make_ps_ave_models():
     imgs, labels, real_imgs_index = read_data()
     imgs, mmax, mmin = min_max_scale_images(imgs)
-    ps_ave_from_models = pkl.load(open("/home/hk2315/MSci2/models/ps_ave_from_models.pkl", "rb"))
+    if choose == 711:
+        ps_ave_from_models = pkl.load(open("/home/hk2315/cdcgan_bu/models_test11_no9/ps_ave_from_models.pkl", "rb"))
+        z_list = [7,8,9,10,11]
+    if choose == 59:
+        ps_ave_from_models = pkl.load(open("/home/hk2315/MSci2/models/ps_ave_from_models.pkl", "rb"))
+        z_list = [5,6,7,8,9]
+
     k_list = ps_ave_from_models['k_list']
     z_dict = {}
 
@@ -321,8 +356,11 @@ def make_ps_ave_models():
     c = 1
     fig, axs = plt.subplots(r, c, figsize=(4,18))
     cnt = 0
-    for z in range(7,12):
+
+
+    for z in z_list:
         z_lists = ps_ave_from_models[z]
+        z_lists = z_lists[-10:]
         values_list = [ [] for i in range(len(z_lists[0])) ] #list of empty lists
         std_list = []
         ps = np.zeros(len(z_lists[0]))
@@ -360,10 +398,11 @@ def make_ps_ave_models():
         axs[cnt].set_title("Labels: %d" % z)
         axs[cnt].legend()
         cnt += 1
-    fig.savefig("images/ps_ave_from_models.png", bbox_inches = "tight")
+    fig.savefig("images/ps_ave_from_models_%d.png" % choose, bbox_inches = "tight")
     plt.close()
 
 
 
 make_table()
-make_ps_ave_models()
+#make_cor_fig()
+#make_ps_ave_models()
