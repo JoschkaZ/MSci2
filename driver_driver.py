@@ -11,10 +11,13 @@ import time
 
 
 seeds = range(100)
-ZSTART = 9
-ZEND = 5
+ZSTART = 7
+ZEND = 7
 ZSTEP = -1
 ZETA_X = 'default'
+
+ZETA_Xs = np.logspace(2.0e56/6., 2.0e56*3.3333, 5)
+print('ZETA_X: ', ZETA_Xs)
 
 for SEED in seeds:
     print('###################################################################')
@@ -32,17 +35,19 @@ for SEED in seeds:
     commands = ['make clean']
     utils.run_commands(commands)
 
-    #change some parameters
-    utils.change_parameter('ZETA_X', ZETA_X)
-    utils.change_parameter('RANDOM_SEED', str(SEED))
-    utils.change_parameter('drive_zscroll_noTs ZSTART', ZSTART) # 8
-    utils.change_parameter('drive_zscroll_noTs ZEND', ZEND)
-    utils.change_parameter('drive_zscroll_noTs ZSTEP', ZSTEP)
+    for ZETA_X in ZETA_Xs:
+        print('ZETA_X: ', ZETA_X)
+        #change some parameters
+        utils.change_parameter('ZETA_X', ZETA_X)
+        utils.change_parameter('RANDOM_SEED', str(SEED))
+        utils.change_parameter('drive_zscroll_noTs ZSTART', ZSTART) # 8
+        utils.change_parameter('drive_zscroll_noTs ZEND', ZEND)
+        utils.change_parameter('drive_zscroll_noTs ZSTEP', ZSTEP)
 
-    #run driver
-    #commands = ['make', './drive_logZscroll_Ts']
-    commands = ['make', './drive_zscroll_noTs']
-    utils.run_commands(commands)
+        #run driver
+        #commands = ['make', './drive_logZscroll_Ts']
+        commands = ['make', './drive_zscroll_noTs']
+        utils.run_commands(commands)
 
     #rename and zip all delta_T_boxes
     # box name is: parameter_string + '_' + old_boxname
