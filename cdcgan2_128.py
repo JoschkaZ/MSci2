@@ -159,8 +159,8 @@ class binary_CGAN():
 
     def read_data(self):
 
-        #data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
-        data = pkl.load(open(r"D:\\Outputs\\slices2_128.pkl", "rb"))
+        data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+        #data = pkl.load(open(r"D:\\Outputs\\slices2_128.pkl", "rb"))
 
         self.imgs = []
         self.labels = []
@@ -512,7 +512,7 @@ class combined_CGAN():
         # identify model to load
         if platform == 'linux':
             user = utils.get_user()
-            #mypath = r'/home/' + user + r'/MSci2/models' # NOTE LINUX OR WINDOWS
+            mypath = r'/home/' + user + r'/cdcgan_bu/models_binary_3' # NOTE LINUX OR WINDOWS
         else:
             mypath = r"C:\\Users\\Joschka\\github\\MSci2\\models"
         files = [f for f in listdir(mypath) if isfile(join(mypath, f))]
@@ -528,15 +528,16 @@ class combined_CGAN():
 
         print('Reading weights from: ')
         print(mypath + r'\\b_128_generator_weights_' + str(time_to_load) + '.h5') # NOTE LINUX OR WINDOWS
+        self.binary_generator.load_weights(mypath + r'/b_128_generator_weights_' + str(time_to_load) + '.h5')
         #self.binary_generator.load_weights(mypath + r'\\b_128_generator_weights_' + str(time_to_load) + '.h5')
-        self.binary_generator.load_weights(mypath + r'\\b_128_generator_weights_1551108792.h5')
+        #self.binary_generator.load_weights(mypath + r'\\b_128_generator_weights_1551108792.h5')
         self.binary_generator.trainable = False
 
 
     def read_data(self):
 
-        #data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
-        data = pkl.load(open(r"D:\\Outputs\\slices2_128.pkl", "rb"))
+        data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+        #data = pkl.load(open(r"D:\\Outputs\\slices2_128.pkl", "rb"))
 
         self.imgs = []
         self.labels = []
@@ -614,11 +615,11 @@ class combined_CGAN():
             #out = out - 1.
             '''
 
-        n_channel = 128
+        n_channel = 96
         kernel_size = 5
 
-        con1 = Dense(n_channel, activation='tanh')(con) #model settings
-        con1 = Reshape((1,1,n_channel))(con1)
+        con1 = Dense(128, activation='tanh')(con) #model settings
+        con1 = Reshape((1,1,128))(con1)
         con1 = UpSampling2D((128,128))(con1)
 
 
@@ -626,9 +627,15 @@ class combined_CGAN():
         #con2 = UpSampling1D((128))(con2)
         #con2 = Permute((1,2,0))(con2)
 
-        con2 =  Conv2D(int(n_channel/4), kernel_size=kernel_size, strides=1, padding="same")(binary_img)
-        con2 =  Conv2D(int(n_channel/2), kernel_size=kernel_size, strides=1, padding="same")(con2)
-        con2 =  Conv2D(n_channel, kernel_size=kernel_size, strides=1, padding="same")(con2)
+        con2 = Conv2D(int(32), kernel_size=kernel_size, strides=1, padding="same")(binary_img)
+        con2 = Activation("relu")(con2)
+        con2 = BatchNormalization(momentum=0.8)(con2)
+        con2 = Conv2D(int(32), kernel_size=kernel_size, strides=1, padding="same")(con2)
+        con2 = Activation("relu")(con2)
+        con2 = BatchNormalization(momentum=0.8)(con2)
+        con2 = Conv2D(32, kernel_size=kernel_size, strides=1, padding="same")(con2)
+        con2 = Activation("relu")(con2)
+        #con2 = BatchNormalization(momentum=0.8)(con2)
 
 
         hid = Dense(n_channel*8*8, activation='relu')(noise)
@@ -650,27 +657,45 @@ class combined_CGAN():
         hid = Conv2DTranspose(n_channel, kernel_size=kernel_size, strides=2, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = Activation("relu")(hid) # -> 128x144x144
+        hid = Concatenate()([hid, con2])
         hid = Multiply()([hid, con1])
-        hid = Multiply()([hid, con2])
+        #hid = Multiply()([hid, con2])
+
+        n_channel = 128
 
         hid = Conv2D(n_channel, kernel_size=kernel_size, strides=1, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = Activation("relu")(hid) # -> 128x144x144
         hid = Multiply()([hid, con1])
-        hid = Multiply()([hid, con2])
+        #hid = Multiply()([hid, con2])
 
         hid = Conv2D(n_channel, kernel_size=kernel_size, strides=1, padding="same")(hid)
         hid = BatchNormalization(momentum=0.8)(hid)
         hid = Activation("relu")(hid) # -> 128x144x144
         hid = Multiply()([hid, con1])
-        hid = Multiply()([hid, con2])
+        #hid = Multiply()([hid, con2])
 
         hid = Conv2D(1, kernel_size=kernel_size, strides=1, padding="same")(hid)
-        out = Activation("sigmoid")(hid)
+        out = BatchNormalization(momentum=0.8)(hid)
+        out = Activation("relu")(out)
+        #out = Activation("tanh")(hid)
+
 
         out = multiply([out, binary_img])
-        out = multiply([out,twos])
-        out = subtract([out, ones])
+        #out = multiply([out,twos])
+        #out = subtract([out, ones])
+        """
+        out = Conv2D(1, kernel_size=kernel_size, strides=1, padding="same")(out)
+        out = BatchNormalization(momentum=0.8)(out)
+        out = Activation("relu")(out)
+
+        out = Conv2D(1, kernel_size=kernel_size, strides=1, padding="same")(out)
+        out = BatchNormalization(momentum=0.8)(out)
+        out = Activation("relu")(out)
+        """
+        out = Conv2D(1, kernel_size=kernel_size, strides=1, padding="same")(out)
+        out = Activation("tanh")(out)
+
 
         model =  Model([noise, con, binary_img, ones, twos], out)
         model.summary()
@@ -1082,17 +1107,17 @@ if __name__ == '__main__':
         if args[2] == 'binary':
             if args[1] == 'new':
                 bcgan = binary_CGAN(use_old_model=False)
-                bcgan.train(epochs=400000, batch_size=4, sample_interval=100, save_model_interval = 500)
+                bcgan.train(epochs=400000, batch_size=32, sample_interval=100, save_model_interval = 500)
             elif args[1] == 'continue':
                 bcgan = binary_CGAN(use_old_model=True)
-                bcgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval = 500)
+                bcgan.train(epochs=400000, batch_size=32, sample_interval=50, save_model_interval = 500)
             else:
                 print('argument not recognised')
 
         elif args[2] == 'combined':
             if args[1] == 'new':
                 ccgan = combined_CGAN(use_old_model=False)
-                ccgan.train(epochs=400000, batch_size=4, sample_interval=50, save_model_interval=500)
+                ccgan.train(epochs=400000, batch_size=32, sample_interval=50, save_model_interval=500)
             else:
                 print('WHUUUUUUU HAHAHAHA')
         else:
