@@ -398,7 +398,7 @@ def make_ps_ave_models():
         axs[cnt].set_title("Labels: %d" % z)
         axs[cnt].legend()
         cnt += 1
-    fig.savefig("images/ps_ave_from_models.png", bbox_inches = "tight")
+    fig.savefig("images/ps_ave_from_models_%d.png" % choose, bbox_inches = "tight")
     plt.close()
 
 
