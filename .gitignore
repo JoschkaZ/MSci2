@@ -1,0 +1,7 @@
+*.csv
+*.pyc
+*.pkl
+*.pdf
+*.png
+*.h5
+data/banana/
