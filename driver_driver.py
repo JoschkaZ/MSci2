@@ -21,7 +21,7 @@ ZETA_Xs = np.array([2.0e56/4, 2.0e56/2, 2.0e56, 2.0e56*2, 2.0e56*4])
 
 print('ZETA_X: ', ZETA_Xs)
 
-for SEED in seeds:
+for SEED in seeds: #
     for ZETA_X in ZETA_Xs:
         print('ZETA_X: ', ZETA_X)
         print('###################################################################')
