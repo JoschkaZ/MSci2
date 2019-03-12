@@ -16,7 +16,7 @@ ZEND = 7
 ZSTEP = -1
 ZETA_X = 'default'
 
-ZETA_Xs = np.logspace(2.0e56/6., 2.0e56*3.3333, 5)
+ZETA_Xs = np.logspace(np.log10(2.0e56/6.), np.log10(2.0e56*3.3333), 5)
 print('ZETA_X: ', ZETA_Xs)
 
 for SEED in seeds:
