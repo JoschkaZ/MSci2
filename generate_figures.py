@@ -20,11 +20,13 @@ import stats_utils
 import tensorflow as tf
 import matplotlib as mpl
 
-choose = 711
-#choose = 59
+#choose = 711
+choose = 59
 
 if choose == 711:
     generator = load_model(r'/home/hk2315/cdcgan_bu/models_test11_no9/21256generator_1550767593.h5')
+if choose == 59:
+    generator = load_model(r'/home/hk2315/MSci2/models/21256generator_1552056453.h5')
 
 
 def read_data():
@@ -34,7 +36,7 @@ def read_data():
     if choose == 711:
         data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
     if choose == 59:
-        data = pkl.load(open("/home/jz8415/128_all.pkl", "rb"))
+        data = pkl.load(open("/home/jz8415/slices2_128_5to9.pkl", "rb"))
     print('data imported!')
 
     imgs = []
@@ -404,5 +406,5 @@ def make_ps_ave_models():
 
 
 make_table()
-#make_cor_fig()
-#make_ps_ave_models()
+make_cor_fig()
+make_ps_ave_models()
