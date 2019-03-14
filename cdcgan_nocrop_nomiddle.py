@@ -93,7 +93,8 @@ class CGAN():
 
         print('importing data...')
         #data = pkl.load(open(r"C:\\Outputs\\slices2_128.pkl", "rb"))
-        data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+        #data = pkl.load(open("/home/jz8415/slices2_128_all.pkl", "rb"))
+        data = pkl.load(open("/home/jz8415/MSci2/slices2_128_5to9.pkl", "rb"))
         print('data imported!')
 
         self.imgs = []
@@ -171,7 +172,7 @@ class CGAN():
         hid = Multiply()([hid, con1])
 
         hid = Conv2D(1, kernel_size=kernel_size, strides=1, padding="same")(hid)
-        hid = Activation("tanh")(hid)
+        out = Activation("tanh")(hid)
 
         #out = Cropping2D(cropping=((8,8),(8,8)))(hid)
         # -> 1x128x128
@@ -265,6 +266,9 @@ class CGAN():
     def train(self, epochs, batch_size=64, sample_interval=50, save_model_interval=500):
 
         #SCALE IMAGES
+        print('--------------------------------------------------------------------------------------------------------')
+        for key in self.real_imgs_index:
+            print(key)
         self.min_max_scale_images()
         self.labels = self.scale_labels(self.labels)
 
@@ -389,7 +393,7 @@ class CGAN():
                 plt.close()
 
         if separate == True:
-            z_list_ps = range(7,12)
+            z_list_ps = range(5,10)
             if self.find_ps == True:
                 self.real_imgs_dict_ps = {}
                 for i in self.real_imgs_index:
@@ -430,9 +434,9 @@ class CGAN():
                 fig, axs = plt.subplots(r, c, figsize=(4,18), dpi=250)
                 cnt = 0
                 for z in z_list_ps:
-                    axs[cnt].errorbar(x=self.fake_imgs_dict_ps[z][1], y=self.fake_imgs_dict_ps[z][0], yerr=self.fake_imgs_dict_ps[z][2])
+                    axs[cnt].errorbar(x=self.fake_imgs_dict_ps[z][1], y=self.fake_imgs_dict_ps[z][0], yerr=self.fake_imgs_dict_ps[z][2], label='fake')
                     axs[cnt].set_yscale('log')
-                    axs[cnt].plot(self.real_imgs_dict_ps[z][1],self.real_imgs_dict_ps[z][0])
+                    axs[cnt].plot(self.real_imgs_dict_ps[z][1],self.real_imgs_dict_ps[z][0], label='true')
                     axs[cnt].set_yscale('log')
                     #axs[cnt].legend()
 
@@ -445,7 +449,7 @@ class CGAN():
                 plt.close()
 
     def calc_peak_count_brightness(self, epoch):
-        z_list_pk = range(7,12)
+        z_list_pk = range(5,10)
         if self.find_peak_brightness == True:
             self.real_imgs_dict_pk = {}
             for i in self.real_imgs_index:
@@ -487,15 +491,15 @@ class CGAN():
     def sample_images(self, epoch):
 
         sample_at0 = [
+        [5.],
+        [5.5],
+        [6.],
+        [6.5],
         [7.],
         [7.5],
         [8.],
         [8.5],
-        [9.],
-        [9.5],
-        [10.],
-        [10.5],
-        [11.]
+        [9.]
         ]
         r = len(sample_at0)
         c = 3
