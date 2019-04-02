@@ -31,4 +31,4 @@ for z in z_list:
     gen_imgs = generator.predict([noise, sample])
     gen_imgs_list.append(gen_imgs)
 elapsed_time = time.time() - start_time
-print elapsed_time
+print elapsed_time()
