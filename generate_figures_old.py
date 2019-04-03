@@ -119,8 +119,6 @@ def make_table():
         [10.],
         [11.]
         ]
-        ps_ave_from_models = pkl.load(open("/home/hk2315/cdcgan_bu/models_test11_no9/ps_ave_from_models.pkl", "rb"))
-    
     if choose == 59:
         sample_at0 = [
         [5.],
@@ -129,7 +127,6 @@ def make_table():
         [8.],
         [9.]
         ]
-        ps_ave_from_models = pkl.load(open("/home/hk2315/MSci2/models/ps_ave_from_models.pkl", "rb"))
 
     r = len(sample_at0)
     c = 5
@@ -227,7 +224,7 @@ def make_table():
                 real_imgs = imgs[index_list]
                 real_imgs = np.squeeze(real_imgs)
                 real_ave_ps, real_ps_std, k_list_real = stats_utils.produce_average_ps(real_imgs)
-                """
+
                 noise = np.random.normal(0, 1, (ave_ps_from, 100))###100
                 mal = max(real_imgs_index.keys())
                 mil = min(real_imgs_index.keys())
@@ -237,35 +234,10 @@ def make_table():
                 gen_imgs2 = np.squeeze(gen_imgs2)
                 fake_ave_ps, fake_ps_std, k_list_fake = stats_utils.produce_average_ps(gen_imgs2)
                 fake_ps_std = fake_ps_std/(np.sqrt(ave_ps_from))
-                """
-                #model averaged ps
-                z_lists = ps_ave_from_models[temp_copy[i][0]]
-                z_lists = z_lists[-20:]
-                values_list = [ [] for i in range(len(z_lists[0])) ] #list of empty lists
-                std_list = []
-                ps = np.zeros(len(z_lists[0]))
-                
-                for l in range(len(z_lists)):
-                    s = z_lists[l]
-                    ps = np.add(ps,s)
-                    for j in range(len(s)):
-                        values_list[j].append(s[j])
-                ps = ps/(len(z_lists))
-                
-                for k in range(len(values_list)):
-                    std = np.std(values_list[k])
-                    std = std/np.sqrt(len(values_list[k]))
-                    std_list.append(std)
-                
-                k_list_fake = k_list_real
-                fake_ave_ps = ps
-                fake_ps_std = std_list
-                #ends here
-                
 
-                ax.errorbar(x=k_list_fake[2:], y=fake_ave_ps[2:], yerr=fake_ps_std[2:], color='orange', alpha=0.5, label="fake")
+                ax.errorbar(x=k_list_fake[10:], y=fake_ave_ps[10:], yerr=fake_ps_std[10:], color='orange', alpha=0.5, label="fake")
                 ax.set_yscale('log')
-                ax.plot(k_list_real[2:], real_ave_ps[2:], color='blue', label="real")
+                ax.plot(k_list_real[10:], real_ave_ps[10:], color='blue', label="real")
                 ax.set_yscale('log')
                 plt.xlabel(r'Frequency[Mpc' + str(r'$^{-1}$') + r']', fontsize=20)
                 plt.ylabel(r'Power[Mpc' + str(r'$^{-2}$') + r']', fontsize=20)
@@ -324,7 +296,7 @@ def make_cb():
 
 
 
-def make_cor_fig(ff = True):
+def make_cor_fig():
     imgs, labels, real_imgs_index = read_data()
     imgs, mmax, mmin = min_max_scale_images(imgs)
 
@@ -332,12 +304,6 @@ def make_cor_fig(ff = True):
         z_list = [7,8,9,10,11]
     if choose == 59:
         z_list = [5,6,7,8,9]
-    
-    r = 1
-    c = 5
-    fig, axs = plt.subplots(r, c, figsize=(45,8))
-    cnt = 0
-    
     for z in z_list:
         #make = True
         #count = 0
@@ -348,28 +314,16 @@ def make_cor_fig(ff = True):
         z_vec = (z_vec - (mal+mil)/2.) / ((mal-mil)/2.)
         gen_imgs2 = generator.predict([noise, np.reshape(z_vec,(100,1))])###100
         gen_imgs2 = np.squeeze(gen_imgs2)
-        if ff == True:
-            imgs1 = gen_imgs2
-        if ff == False:
-            idx = np.random.randint(0, len(real_imgs_index[z])-1, 100)
-            index_list = np.array(real_imgs_index[z])[idx]
-            real_imgs = imgs[index_list]
-            real_imgs = np.squeeze(real_imgs)
-            imgs1 = real_imgs
-            print(imgs1.shape)
 
         y_list = []
         cor = True
-        for iii,s42 in enumerate(imgs1):
+        for iii,s42 in enumerate(gen_imgs2):
                     for jjj,s43 in enumerate(gen_imgs2):
                         if cor == True:
                             if iii == 10 and jjj == 10:
-                                if ff == True:
-                                    Sconv, k_list_cross = stats_utils.xps(s42,s43)
-                                if ff == False:
-                                    Sconv, k_list_cross = stats_utils.xps(s42,s42)
+                                Sconv, k_list_cross = stats_utils.xps(s42,s43)
                                 #if make == True:
-                                axs[cnt].plot(k_list_cross[2:], Sconv[2:], 'r--', label='Correlated')
+                                plt.plot(k_list_cross[2:], Sconv[2:], 'r--', label='Correlated')
                                 cor = False
 
                         if iii != jjj and iii % 10 == 0 and jjj % 5 == 0 and jjj>iii:
@@ -382,14 +336,9 @@ def make_cor_fig(ff = True):
         y = np.mean(y_list, axis=0)
         error = np.std(y_list, axis=0)
         error = error / (np.sqrt(len(y_list)))
-        axs[cnt].set_title("z = %d" % z, fontsize=20)
-        axs[cnt].errorbar(x=k_list_cross[2:], y=Sconv[2:], yerr=error[2:], label='Uncorrelated')
-        axs[cnt].set_xlabel(r'Frequency[Mpc' + str(r'$^{-1}$') + r']', fontsize=20)
-        axs[cnt].set_ylabel(r'Power[Mpc' + str(r'$^{-2}$') + r']', fontsize=20)
-        axs[cnt].legend(prop={'size': 15})
-        cnt += 1
-    plt.savefig("images/cross_%d_%s.png" % (choose,ff))
-    plt.close()
+        plt.errorbar(x=k_list_cross[2:], y=Sconv[2:], yerr=error[2:])
+        plt.savefig("images/cross_%d_%d.png" % (z,choose))
+        plt.close()
 
 
 def make_ps_ave_models():
@@ -407,13 +356,13 @@ def make_ps_ave_models():
 
     r = 5
     c = 1
-    fig, axs = plt.subplots(r, c, figsize=(8,40))
+    fig, axs = plt.subplots(r, c, figsize=(4,18))
     cnt = 0
 
 
     for z in z_list:
         z_lists = ps_ave_from_models[z]
-        z_lists = z_lists[-20:]
+        z_lists = z_lists[-10:]
         values_list = [ [] for i in range(len(z_lists[0])) ] #list of empty lists
         std_list = []
         ps = np.zeros(len(z_lists[0]))
@@ -434,7 +383,7 @@ def make_ps_ave_models():
         #z_dict[z] = [ps]
         #z_dict[z].append(std_list)
 
-        idx = np.random.randint(0, len(real_imgs_index[z])-1, 100)
+        idx = np.random.randint(0, len(real_imgs_index[z])-1, 10)
         index_list = np.array(real_imgs_index[z])[idx]
         real_imgs = imgs[index_list]
         real_imgs = np.squeeze(real_imgs)
@@ -444,22 +393,18 @@ def make_ps_ave_models():
         print(len(ps))
         #print(len(std))
 
-        axs[cnt].errorbar(x=k_list[2:], y=ps[2:], yerr=std_list[2:], color='orange', label='Fake') ###fix
+        axs[cnt].errorbar(x=k_list[10:], y=ps[10:], yerr=std_list[10:], color='orange', label='Fake') ###fix
         axs[cnt].set_yscale('log')
-        axs[cnt].plot(k_list_real[2:], real_ave_ps[2:], color='blue', label="real")
+        axs[cnt].plot(k_list_real[10:], real_ave_ps[10:], color='blue', label="real")
         axs[cnt].set_yscale('log')
-        axs[cnt].set_title("z = %d" % z, fontsize=20)
-        axs[cnt].set_xlabel(r'Frequency[Mpc' + str(r'$^{-1}$') + r']', fontsize=20)
-        axs[cnt].set_ylabel(r'Power[Mpc' + str(r'$^{-2}$') + r']', fontsize=20)
-        axs[cnt].legend(prop={'size': 15})
+        axs[cnt].set_title("Labels: %d" % z)
+        axs[cnt].legend()
         cnt += 1
     fig.savefig("images/ps_ave_from_models_%d.png" % choose, bbox_inches = "tight")
     plt.close()
 
 
 
-#make_table()
-#make_cb()
-make_cor_fig(ff = False)
-make_cor_fig(ff = True)
-#make_ps_ave_models()
+make_table()
+make_cor_fig()
+make_ps_ave_models()
